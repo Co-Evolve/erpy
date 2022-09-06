@@ -1,6 +1,6 @@
 # ERPY: Evolutionary Robotics in Python
 
-Erpy provides generic framework for brain-body co-optimisation of robots.
+Erpy provides generic framework for evolutionary brain-body co-optimisation of robots.
 
 - Implemented algorithms:
   - MAP-Elites
