@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 
@@ -17,8 +18,8 @@ class MAPElitesCell:
 @dataclass
 class MAPElitesConfig(EAConfig):
     random_state: np.random.RandomState
-    genome_generator: Callable[[int], CreatureGenome]
-    offspring_generator: Callable[[CreatureGenome, Callable[[], int]], CreatureGenome]
+    genome_generator: Callable[[int], Genome]
+    offspring_generator: Callable[[Genome, Callable[[], int]], Genome]
     morphological_innovation_protection: bool
     initial_archive_coverage: float
     initialisation_time_limit: float

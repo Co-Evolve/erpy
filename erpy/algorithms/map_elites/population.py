@@ -25,7 +25,6 @@ class MAPElitesPopulation(Population):
 
         self._archive: Dict[PhenomeDescriptor, MAPElitesCell] = dict()
         self._archive_times_selected: Dict[PhenomeDescriptor, int] = defaultdict(int)
-        self._initialise_population()
 
     @property
     def config(self) -> MAPElitesPopulationConfig:

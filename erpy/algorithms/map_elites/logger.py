@@ -24,7 +24,7 @@ class MAPElitesLogger(WandBLogger):
         coverage = population.coverage
 
         # Log the archive
-        x_dim, y_dim = self.map_elites_config.archive_dimensions
+        x_dim, y_dim = population.config.archive_dimensions
         fitness_map = np.zeros((x_dim, y_dim))
 
         for descriptor, cell in population.archive.items():

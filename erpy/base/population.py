@@ -32,10 +32,6 @@ class Population(metaclass=abc.ABCMeta):
     def config(self) -> PopulationConfig:
         return self._config
 
-    @abc.abstractmethod
-    def _initialise_population(self) -> None:
-        raise NotImplementedError
-
     @property
     def genomes(self) -> Dict[int, Genome]:
         return self._genomes
