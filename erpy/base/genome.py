@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 import abc
+import pickle
+from dataclasses import dataclass
 from typing import Optional
+
+import numpy as np
 
 from base.specification import Specification, RobotSpecification, MorphologySpecification, ControllerSpecification
 
 
+@dataclass
+class GenomeConfig:
+    random_state: np.random.RandomState
+
+
 class Genome(metaclass=abc.ABCMeta):
-    def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
+    def __init__(self, config: GenomeConfig, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
+        self._config = config
         self._genome_id = genome_id
         self._parent_genome_id = parent_genome_id
         self.age = 0
@@ -20,31 +30,44 @@ class Genome(metaclass=abc.ABCMeta):
     def parent_genome_id(self) -> int:
         return self._parent_genome_id
 
+    @property
+    def config(self) -> GenomeConfig:
+        return self._config
+
     @abc.abstractmethod
     def to_specification(self) -> Specification:
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def save(self, cell_path):
-        raise NotImplementedError
-
     @staticmethod
     @abc.abstractmethod
-    def generate(genome_id: int) -> Genome:
+    def generate(config: GenomeConfig, genome_id: int) -> Genome:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def mutate(self, child_genome_id: int) -> Genome:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def cross_over(self, partner_genome: Genome, child_genome_id: int) -> Genome:
         raise NotImplementedError
 
+    def save(self, path: str):
+        with open(path, 'wb') as handle:
+            pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 class RobotGenome(Genome, metaclass=abc.ABCMeta):
-    def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
-        super().__init__(genome_id, parent_genome_id)
+    def __init__(self, config: GenomeConfig, morphology_genome: MorphologyGenome, controller_genome: ControllerGenome,
+                 genome_id: int, parent_genome_id: Optional[int] = None) -> None:
+        super().__init__(config, genome_id, parent_genome_id)
+        self._morphology_genome = morphology_genome
+        self._controller_genome = controller_genome
+
+    @property
+    def morphology_genome(self) -> MorphologyGenome:
+        return self._morphology_genome
+
+    @property
+    def controller_genome(self) -> ControllerGenome:
+        return self._controller_genome
 
     @abc.abstractmethod
     def to_specification(self) -> RobotSpecification:
@@ -52,8 +75,8 @@ class RobotGenome(Genome, metaclass=abc.ABCMeta):
 
 
 class MorphologyGenome(Genome, metaclass=abc.ABCMeta):
-    def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
-        super().__init__(genome_id, parent_genome_id)
+    def __init__(self, config: GenomeConfig, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
+        super().__init__(config=config, genome_id=genome_id, parent_genome_id=parent_genome_id)
 
     @abc.abstractmethod
     def to_specification(self) -> MorphologySpecification:
@@ -61,8 +84,8 @@ class MorphologyGenome(Genome, metaclass=abc.ABCMeta):
 
 
 class ControllerGenome(Genome, metaclass=abc.ABCMeta):
-    def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
-        super().__init__(genome_id, parent_genome_id)
+    def __init__(self, config: GenomeConfig, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
+        super().__init__(config=config, genome_id=genome_id, parent_genome_id=parent_genome_id)
 
     @abc.abstractmethod
     def to_specification(self) -> ControllerSpecification:

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
-from typing import List, Iterable
+from typing import List, Iterable, Type
 
 from base.parameters import Parameter
 from base.phenome import Robot, Controller, Morphology
@@ -26,21 +28,25 @@ class Specification(metaclass=abc.ABCMeta):
 
 @dataclass
 class RobotSpecification(Specification, metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+    robot: Type[Robot]
+    morphology_specification: MorphologySpecification
+    controller_specification: ControllerSpecification
+
     def to_phenome(self) -> Robot:
-        pass
+        return self.robot(self)
 
 
 @dataclass
 class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
-    @abc.abstractmethod
+    morphology: Type[Morphology]
+
     def to_phenome(self) -> Morphology:
-        pass
+        return self.morphology(self)
 
 
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
+    controller: Type[Controller]
 
-    @abc.abstractmethod
     def to_phenome(self) -> Controller:
-        pass
+        return self.controller(self)

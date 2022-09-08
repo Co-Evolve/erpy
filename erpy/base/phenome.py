@@ -19,6 +19,19 @@ class Phenome(metaclass=abc.ABCMeta):
 class Robot(Phenome, metaclass=abc.ABCMeta):
     def __init__(self, specification: RobotSpecification):
         super().__init__(specification=specification)
+        self._morphology = specification.morphology_specification.to_phenome()
+        self._controller = specification.controller_specification.to_phenome()
+
+    @property
+    def morphology(self) -> Morphology:
+        return self._morphology
+
+    @property
+    def controller(self) -> Controller:
+        return self._controller
+
+    def __call__(self, observations: np.ndarray) -> np.ndarray:
+        return self.controller(observations)
 
 
 class Morphology(Phenome, metaclass=abc.ABCMeta):
@@ -31,5 +44,5 @@ class Controller(Phenome, metaclass=abc.ABCMeta):
         super().__init__(specification=specification)
 
     @abc.abstractmethod
-    def predict(self, observations: np.ndarray) -> np.ndarray:
+    def __call__(self, observations: np.ndarray) -> np.ndarray:
         raise NotImplementedError
