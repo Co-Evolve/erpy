@@ -2,14 +2,12 @@ import abc
 from dataclasses import dataclass
 from itertools import count
 
-from erpy.base.genomes import Genome
-from erpy.base.population import Population
+from base.population import Population
 
 
 @dataclass
 class ReproducerConfig:
-    genome_variator: GenomeVariator
-
+    pass
 
 class Reproducer(metaclass=abc.ABCMeta):
     def __init__(self, config: ReproducerConfig) -> None:

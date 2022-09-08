@@ -3,9 +3,9 @@ from typing import Callable
 
 import numpy as np
 
-from erpy.base.ea import EAConfig
-from erpy.base.evaluator import EvaluationResult
-from erpy.base.genomes import Genome
+from base.ea import EAConfig
+from base.evaluator import EvaluationResult
+from base.genome import Genome
 
 
 @dataclass
@@ -18,8 +18,6 @@ class MAPElitesCell:
 @dataclass
 class MAPElitesConfig(EAConfig):
     random_state: np.random.RandomState
-    genome_generator: Callable[[int], Genome]
-    offspring_generator: Callable[[Genome, Callable[[], int]], Genome]
     morphological_innovation_protection: bool
     initial_archive_coverage: float
     initialisation_time_limit: float

@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from typing import Optional
 
-from erpy.base.phenome import Phenome, RobotMorphology, RobotController, Robot
+from base.specification import Specification, RobotSpecification, MorphologySpecification, ControllerSpecification
 
 
 class Genome(metaclass=abc.ABCMeta):
@@ -21,11 +21,16 @@ class Genome(metaclass=abc.ABCMeta):
         return self._parent_genome_id
 
     @abc.abstractmethod
-    def to_phenome(self) -> Phenome:
+    def to_specification(self) -> Specification:
         raise NotImplementedError
 
     @abc.abstractmethod
     def save(self, cell_path):
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def generate(genome_id: int) -> Genome:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -42,23 +47,23 @@ class RobotGenome(Genome, metaclass=abc.ABCMeta):
         super().__init__(genome_id, parent_genome_id)
 
     @abc.abstractmethod
-    def to_phenome(self) -> Robot:
+    def to_specification(self) -> RobotSpecification:
         raise NotImplementedError
 
 
-class RobotMorphologyGenome(Genome, metaclass=abc.ABCMeta):
+class MorphologyGenome(Genome, metaclass=abc.ABCMeta):
     def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
         super().__init__(genome_id, parent_genome_id)
 
     @abc.abstractmethod
-    def to_phenome(self) -> RobotMorphology:
+    def to_specification(self) -> MorphologySpecification:
         raise NotImplementedError
 
 
-class RobotControllerGenome(Genome, metaclass=abc.ABCMeta):
+class ControllerGenome(Genome, metaclass=abc.ABCMeta):
     def __init__(self, genome_id: int, parent_genome_id: Optional[int] = None) -> None:
         super().__init__(genome_id, parent_genome_id)
 
     @abc.abstractmethod
-    def to_phenome(self) -> RobotController:
+    def to_specification(self) -> ControllerSpecification:
         raise NotImplementedError

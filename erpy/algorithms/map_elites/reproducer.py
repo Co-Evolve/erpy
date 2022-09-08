@@ -1,5 +1,5 @@
-from erpy.base.population import Population
-from erpy.base.reproducer import Reproducer, ReproducerConfig
+from base.population import Population
+from base.reproducer import Reproducer, ReproducerConfig
 
 
 class MAPElitesReproducer(Reproducer):
