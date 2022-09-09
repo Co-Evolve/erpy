@@ -1,12 +1,17 @@
+from __future__ import annotations
 import abc
 from dataclasses import dataclass
+from typing import Type
 
-from erpy.base.population import Population
+from base.population import Population
 
 
 @dataclass
 class LoggerConfig:
-    pass
+    @property
+    @abc.abstractmethod
+    def logger(self) -> Type[Logger]:
+        raise NotImplementedError
 
 
 class Logger(metaclass=abc.ABCMeta):

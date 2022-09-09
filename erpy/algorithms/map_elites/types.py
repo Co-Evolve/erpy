@@ -1,3 +1,4 @@
 from typing import Tuple, Any
 
-PhenomeDescriptor = Tuple[Any, ...]
+PhenomeDescription = Tuple[Any, ...]
+CellIndex = Tuple[int, ...]

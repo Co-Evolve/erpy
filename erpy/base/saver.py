@@ -1,13 +1,20 @@
+from __future__ import annotations
 import abc
 from dataclasses import dataclass
+from typing import Type
 
-from erpy.base.population import Population
+from base.population import Population
 
 
 @dataclass
 class SaverConfig:
     save_freq: int
     save_path: str
+
+    @property
+    @abc.abstractmethod
+    def saver(self) -> Type[Saver]:
+        raise NotImplementedError
 
 
 class Saver(metaclass=abc.ABCMeta):

@@ -1,22 +1,28 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List
+from typing import List, Type
 
 import numpy as np
 import wandb
 
-from erpy.base.logger import Logger, LoggerConfig
-from erpy.base.population import Population
+from base.logger import Logger, LoggerConfig
+from base.population import Population
 
 
 @dataclass
-class WandBConfig(LoggerConfig):
+class WandBLoggerConfig(LoggerConfig):
     project_name: str
     group: str
     tags: List[str]
 
+    @property
+    def logger(self) -> Type[WandBLogger]:
+        return WandBLogger
+
 
 class WandBLogger(Logger):
-    def __init__(self, config: WandBConfig):
+    def __init__(self, config: WandBLoggerConfig):
         super(WandBLogger, self).__init__(config=config)
         self.wandb = wandb.init(project=config.project_name,
                                 group=config.group,

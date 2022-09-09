@@ -1,5 +1,17 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Type
+
 from base.population import Population
 from base.reproducer import Reproducer, ReproducerConfig
+
+
+@dataclass
+class MAPElitesReproducerConfig(ReproducerConfig):
+    @property
+    def reproducer(self) -> Type[MAPElitesReproducer]:
+        return MAPElitesReproducer
 
 
 class MAPElitesReproducer(Reproducer):

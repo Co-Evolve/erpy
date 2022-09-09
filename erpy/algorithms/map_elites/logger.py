@@ -1,15 +1,25 @@
+from dataclasses import dataclass
+from typing import Type
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import wandb
 
-from erpy.algorithms.map_elites.population import MAPElitesPopulation
-from erpy.loggers.wandb_logger import WandBLogger, WandBConfig
+from algorithms.map_elites.population import MAPElitesPopulation
+from loggers.wandb_logger import WandBLogger, WandBLoggerConfig
+
+
+@dataclass
+class MAPElitesLoggerConfig(WandBLoggerConfig):
+    @property
+    def logger(self) -> Type[WandBLogger]:
+        return MAPElitesLogger
 
 
 class MAPElitesLogger(WandBLogger):
-    def __init__(self, wandb_config: WandBConfig):
-        super(MAPElitesLogger, self).__init__(config=wandb_config)
+    def __init__(self, config: MAPElitesLoggerConfig):
+        super(MAPElitesLogger, self).__init__(config=config)
 
     def log(self, population: MAPElitesPopulation) -> None:
         # Log archive fitnesses

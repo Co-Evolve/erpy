@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from itertools import count
-from typing import List, Dict
+from typing import List, Dict, Type
 
-from erpy.base.evaluator import EvaluationResult
-from erpy.base.genomes import Genome
+from base.evaluator import EvaluationResult
+from base.genome import Genome
 
 
 @dataclass
 class PopulationConfig:
-    pass
+    @property
+    @abc.abstractmethod
+    def population(self) -> Type[Population]:
+        raise NotImplementedError
 
 
 class Population(metaclass=abc.ABCMeta):
@@ -56,11 +61,9 @@ class Population(metaclass=abc.ABCMeta):
     def under_evaluation(self) -> List[int]:
         return self._under_evaluation
 
-    @abc.abstractmethod
     def before_evaluation(self) -> None:
         pass
 
-    @abc.abstractmethod
     def after_evaluation(self) -> None:
         pass
 

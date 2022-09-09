@@ -1,18 +1,28 @@
+from __future__ import annotations
+
+import abc
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Type
 
 from ray.util import ActorPool
 from tqdm import tqdm
 
-from erpy.base.evaluator import Evaluator, EvaluatorConfig
-from erpy.base.population import Population
+from base.evaluator import EvaluationActor, EvaluatorConfig, Evaluator
+from base.population import Population
 
 
 @dataclass
-class DistributedEvaluatorConfig(EvaluatorConfig):
+class DistributedEvaluatorConfig(EvaluatorConfig, metaclass=abc.ABC):
     num_workers: int
-    actor_generator: Callable[[EvaluatorConfig], Evaluator]
+    actor_generator: Callable[[DistributedEvaluatorConfig], Type[EvaluationActor]]
     num_cores_per_worker: int
+
+
+@dataclass
+class RayEvaluatorConfig(DistributedEvaluatorConfig):
+    @property
+    def evaluator(self) -> Type[RayDistributedEvaluator]:
+        return RayDistributedEvaluator
 
 
 class RayDistributedEvaluator(Evaluator):

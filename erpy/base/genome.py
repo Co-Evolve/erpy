@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import pickle
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Type
 
 import numpy as np
 
@@ -13,6 +13,11 @@ from base.specification import Specification, RobotSpecification, MorphologySpec
 @dataclass
 class GenomeConfig:
     random_state: np.random.RandomState
+
+    @property
+    @abc.abstractmethod
+    def genome(self) -> Type[Genome]:
+        raise NotImplementedError
 
 
 class Genome(metaclass=abc.ABCMeta):

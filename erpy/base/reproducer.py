@@ -1,13 +1,20 @@
+from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from itertools import count
+from typing import Type
 
 from base.population import Population
 
 
 @dataclass
 class ReproducerConfig:
-    pass
+    @property
+    @abc.abstractmethod
+    def reproducer(self) -> Type[Reproducer]:
+        raise NotImplementedError
+
 
 class Reproducer(metaclass=abc.ABCMeta):
     def __init__(self, config: ReproducerConfig) -> None:

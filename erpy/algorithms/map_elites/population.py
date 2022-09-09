@@ -2,29 +2,33 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Tuple, Dict, Callable, Optional
+from typing import Dict, Type
 
-from erpy.algorithms.map_elites.map_elites import MAPElitesCell
-from erpy.algorithms.map_elites.types import PhenomeDescriptor
-from erpy.base.evaluator import EvaluationResult
-from erpy.base.genomes import Genome
-from erpy.base.population import PopulationConfig, Population
+import numpy as np
+
+from algorithms.map_elites.map_elites import MAPElitesCell
+from algorithms.map_elites.types import CellIndex
+from base.evaluator import EvaluationResult
+from base.genome import RobotGenome
+from base.population import PopulationConfig, Population
 
 
 @dataclass
 class MAPElitesPopulationConfig(PopulationConfig):
-    archive_dimensions: Tuple[int, ...]
-    to_phenotypic_descriptor: Callable[
-        [[MAPElitesPopulationConfig], Optional[Genome]], PhenomeDescriptor]
+    archive_dimensions: np.ndarray
     morphological_innovation_protection: bool
+
+    @property
+    def population(self) -> Type[MAPElitesPopulation]:
+        return MAPElitesPopulation
 
 
 class MAPElitesPopulation(Population):
     def __init__(self, config: MAPElitesPopulationConfig) -> None:
         super(MAPElitesPopulation, self).__init__(config=config)
 
-        self._archive: Dict[PhenomeDescriptor, MAPElitesCell] = dict()
-        self._archive_times_selected: Dict[PhenomeDescriptor, int] = defaultdict(int)
+        self._archive: Dict[CellIndex, MAPElitesCell] = dict()
+        self._archive_times_selected: Dict[CellIndex, int] = defaultdict(int)
 
     @property
     def config(self) -> MAPElitesPopulationConfig:
@@ -32,10 +36,13 @@ class MAPElitesPopulation(Population):
 
     def _add_to_archive(self, evaluation_result: EvaluationResult) -> None:
         genome = self.genomes[evaluation_result.genome_id]
-        descriptor = self.config.to_phenotypic_descriptor(self.config, genome)
+        descriptor = evaluation_result.info["phenome_descriptor"]
 
-        if descriptor in self._archive:
-            cell = self._archive[descriptor]
+        archive_dimensions = self.config.archive_dimensions
+        cell_index = tuple(np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=1))
+
+        if cell_index in self._archive:
+            cell = self._archive[cell_index]
             # Cell is already occupied -> check if the new genome is better
             if cell.genome.genome_id == evaluation_result.genome_id:
                 # The same genome is the occupant, only replace the evaluation result with the new one
@@ -45,8 +52,8 @@ class MAPElitesPopulation(Population):
                 # The occupant is a different genome
                 if cell.evaluation_result.fitness <= evaluation_result.fitness:
                     # New genome is better -> replace the old one
-                    self._archive[descriptor] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
-                    self._archive[descriptor].should_save = True
+                    self._archive[cell_index] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
+                    self._archive[cell_index].should_save = True
                 elif self.config.morphological_innovation_protection and cell.genome.age > genome.age:
                     # Morphological innovation protection:
                     #   increase competition fairness by forcing additional training of the new genome
@@ -54,8 +61,8 @@ class MAPElitesPopulation(Population):
                     self.to_evaluate.append(genome.genome_id)
         else:
             # Cell is still empty -> place the genome in it
-            self._archive[descriptor] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
-            self._archive[descriptor].should_save = True
+            self._archive[cell_index] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
+            self._archive[cell_index].should_save = True
 
     @property
     def coverage(self) -> float:
@@ -64,7 +71,7 @@ class MAPElitesPopulation(Population):
         return coverage
 
     @property
-    def genomes(self) -> Dict[int, Genome]:
+    def genomes(self) -> Dict[int, RobotGenome]:
         # Update the current _genomes datastructure with the current archive
         archive_genomes = {cell.genome.genome_id: cell.genome for cell in self._archive.values()}
         self._genomes.update(archive_genomes)
@@ -72,15 +79,12 @@ class MAPElitesPopulation(Population):
         return self._genomes
 
     @property
-    def archive(self) -> Dict[PhenomeDescriptor, MAPElitesCell]:
+    def archive(self) -> Dict[CellIndex, MAPElitesCell]:
         return self._archive
 
     @property
-    def archive_times_selected(self) -> Dict[PhenomeDescriptor, int]:
+    def archive_times_selected(self) -> Dict[CellIndex, int]:
         return self._archive_times_selected
-
-    def before_evaluation(self) -> None:
-        pass
 
     def after_evaluation(self) -> None:
         # cleanup

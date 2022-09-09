@@ -1,7 +1,18 @@
-from pathlib import Path
+from __future__ import annotations
 
-from erpy.algorithms.map_elites.population import MAPElitesPopulation
-from erpy.base.saver import Saver, SaverConfig
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Type
+
+from algorithms.map_elites.population import MAPElitesPopulation
+from base.saver import Saver, SaverConfig
+
+
+@dataclass
+class MAPElitesSaverConfig(SaverConfig):
+    @property
+    def saver(self) -> Type[MAPElitesSaver]:
+        return MAPElitesSaver
 
 
 class MAPElitesSaver(Saver):

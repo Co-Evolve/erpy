@@ -26,6 +26,15 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
     def morphology(self) -> Morphology:
         return self._morphology
 
+    @abc.abstractmethod
+    def reset(self) -> None:
+        """
+        Called at the start of every episode.
+        Use this to reset the controller if needed.
+        :return:
+        """
+        raise NotImplementedError
+
     @property
     def controller(self) -> Controller:
         return self._controller
