@@ -6,8 +6,8 @@ from typing import List, Type
 import numpy as np
 import wandb
 
-from base.logger import Logger, LoggerConfig
-from base.population import Population
+from erpy.base.logger import Logger, LoggerConfig
+from erpy.base.population import Population
 
 
 @dataclass

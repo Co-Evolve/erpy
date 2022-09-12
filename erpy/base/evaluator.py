@@ -6,10 +6,10 @@ from typing import Callable, Tuple, Iterable, List, Dict, Any, Type
 
 import numpy as np
 
-from base.genome import RobotGenome
-from base.phenome import Robot
-from base.population import Population
-from base.types import Environment
+from erpy.base.genome import RobotGenome
+from erpy.base.phenome import Robot
+from erpy.base.population import Population
+from erpy.base.types import Environment
 from tasks.task_config import TaskConfig
 
 
@@ -22,12 +22,14 @@ class EvaluationResult:
 
 @dataclass
 class EvaluatorConfig(metaclass=abc.ABCMeta):
-    make_env_fn: Callable[[TaskConfig, RobotGenome], Tuple[Environment, Robot]]
+    make_env_fn: Callable[[TaskConfig, Robot], Tuple[Environment]]
+    robot: Type[Robot]
     reward_aggregator: Callable[[Iterable[float]], float]
     episode_aggregator: Callable[[Iterable[float]], float]
     callbacks: List[Type[EvaluationCallback]]
     num_eval_episodes: int
     render: bool
+    task_config: TaskConfig
 
     @property
     @abc.abstractmethod
@@ -94,12 +96,12 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
         return evaluation_result
 
     @property
-    def name(self):
-        return self.name
+    def name(self) -> str:
+        return self._name
 
     @property
     def data(self):
-        return self.data
+        return self._data
 
 
 class EvaluationCallbackHandler:

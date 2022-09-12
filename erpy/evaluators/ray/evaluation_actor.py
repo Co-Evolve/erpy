@@ -2,9 +2,9 @@ from typing import Type
 
 import ray
 
-from base.evaluator import EvaluatorConfig, EvaluationResult, EvaluationActor
-from base.genome import RobotGenome
-from evaluators.ray.evaluator import DistributedEvaluatorConfig
+from erpy.base.evaluator import EvaluatorConfig, EvaluationResult, EvaluationActor
+from erpy.base.genome import RobotGenome
+from erpy.evaluators.ray.evaluator import DistributedEvaluatorConfig
 from utils.video import create_video
 
 
@@ -17,7 +17,8 @@ def make_base_evaluation_actor(config: DistributedEvaluatorConfig) -> Type[Evalu
         def evaluate(self, genome: RobotGenome) -> EvaluationResult:
             self.callback_handler.reset()
 
-            env, robot = self.config.make_env_fn(genome)
+            robot = self.config.robot(genome.specification)
+            env = self.config.make_env_fn(self.config.task_config, robot)
 
             self.callback_handler.from_genome(genome)
             self.callback_handler.from_robot(robot)

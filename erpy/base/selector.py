@@ -1,19 +1,19 @@
 from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from typing import Type
 
-from base.population import Population
+from erpy.base.population import Population
 
 
 @dataclass
 class SelectorConfig:
-    population_size: int
-
     @property
     @abc.abstractmethod
     def selector(self) -> Type[Selector]:
         raise NotImplementedError
+
 
 class Selector(metaclass=abc.ABCMeta):
     def __init__(self, config: SelectorConfig) -> None:

@@ -1,17 +1,19 @@
 from dataclasses import dataclass
-from typing import Type
+from typing import Type, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import wandb
 
-from algorithms.map_elites.population import MAPElitesPopulation
-from loggers.wandb_logger import WandBLogger, WandBLoggerConfig
+from erpy.algorithms.map_elites.population import MAPElitesPopulation
+from erpy.loggers.wandb_logger import WandBLoggerConfig, WandBLogger
 
 
 @dataclass
 class MAPElitesLoggerConfig(WandBLoggerConfig):
+    archive_dimension_labels: List[str]
+
     @property
     def logger(self) -> Type[WandBLogger]:
         return MAPElitesLogger
@@ -20,6 +22,10 @@ class MAPElitesLoggerConfig(WandBLoggerConfig):
 class MAPElitesLogger(WandBLogger):
     def __init__(self, config: MAPElitesLoggerConfig):
         super(MAPElitesLogger, self).__init__(config=config)
+
+    @property
+    def config(self) -> MAPElitesLoggerConfig:
+        return super().config
 
     def log(self, population: MAPElitesPopulation) -> None:
         # Log archive fitnesses
@@ -33,30 +39,29 @@ class MAPElitesLogger(WandBLogger):
         # Log archive coverage
         coverage = population.coverage
 
-        # Log the archive
-        x_dim, y_dim = population.config.archive_dimensions
-        fitness_map = np.zeros((x_dim, y_dim))
+        # Log a 2D heatmap
+        if len(population.config.archive_dimensions) == 2:
+            x_dim, y_dim = population.config.archive_dimensions
+            fitness_map = np.zeros((x_dim, y_dim))
 
-        for descriptor, cell in population.archive.items():
-            x, y = descriptor
-            fitness = cell.evaluation_result.fitness
-            if abs(fitness) != np.inf:
-                fitness_map[x, y] = abs(fitness)
+            for cell_index, cell in population.archive.items():
+                x, y = cell_index
+                fitness = cell.evaluation_result.fitness
+                if abs(fitness) != np.inf:
+                    fitness_map[x, y] = fitness
 
-        mask = fitness_map == 0
+            mask = fitness_map == 0
+            fitness_map /= np.max(fitness_map)
+            fitness_map[mask] = 0
 
-        fitness_map /= np.max(fitness_map)
-        fitness_map = 1 - fitness_map
-        fitness_map[mask] = 0
+            ax = sns.heatmap(fitness_map, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
+                             yticklabels=[0] + [None] * (y_dim - 2) + [1],
+                             vmin=0,
+                             vmax=np.max(fitness_map))
+            ax.set_xlabel(self.config.archive_dimension_labels[0])
+            ax.set_xlabel(self.config.archive_dimension_labels[1])
+            ax.invert_yaxis()
 
-        ax = sns.heatmap(fitness_map, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
-                         yticklabels=[0] + [None] * (y_dim - 2) + [1],
-                         vmin=0,
-                         vmax=np.max(fitness_map))
-        ax.set_xlabel('Number of tendons')
-        ax.set_ylabel('Average tendon length')
-        ax.invert_yaxis()
-
-        wandb.log({'archive/coverage': coverage,
-                   'archive/normalized_fitness_map': wandb.Image(ax)}, step=population.generation)
-        plt.close()
+            wandb.log({'archive/coverage': coverage,
+                       'archive/normalized_fitness_map': wandb.Image(ax)}, step=population.generation)
+            plt.close()

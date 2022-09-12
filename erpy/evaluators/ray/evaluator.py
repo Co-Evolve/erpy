@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import abc
+from abc import ABC
 from dataclasses import dataclass
-from typing import Callable, Type
+from typing import Callable, Type, cast
 
 from ray.util import ActorPool
 from tqdm import tqdm
 
-from base.evaluator import EvaluationActor, EvaluatorConfig, Evaluator
-from base.population import Population
+from erpy.base.evaluator import EvaluatorConfig, EvaluationActor, Evaluator
+from erpy.base.population import Population
 
 
 @dataclass
-class DistributedEvaluatorConfig(EvaluatorConfig, metaclass=abc.ABC):
+class DistributedEvaluatorConfig(EvaluatorConfig, ABC):
     num_workers: int
     actor_generator: Callable[[DistributedEvaluatorConfig], Type[EvaluationActor]]
     num_cores_per_worker: int
@@ -26,17 +27,17 @@ class RayEvaluatorConfig(DistributedEvaluatorConfig):
 
 
 class RayDistributedEvaluator(Evaluator):
-    def __init__(self, config: DistributedEvaluatorConfig):
+    def __init__(self, config: RayEvaluatorConfig) -> None:
         super(RayDistributedEvaluator, self).__init__(config=config)
 
         self.pool: ActorPool = self._build_pool()
 
     @property
-    def config(self) -> DistributedEvaluatorConfig:
-        return self.config
+    def config(self) -> RayEvaluatorConfig:
+        return super().config
 
     def _build_pool(self) -> ActorPool:
-        workers = [self.config.actor_generator(self.config) for _ in range(self.config.num_workers)]
+        workers = [self.config.actor_generator(self.config).remote(self.config) for _ in range(self.config.num_workers)]
         return ActorPool(workers)
 
     def evaluate(self, population: Population) -> None:
@@ -47,7 +48,7 @@ class RayDistributedEvaluator(Evaluator):
 
         for genome in tqdm(target_genomes, desc=f"Gen {population.generation}\t-\tSending jobs to workers."):
             self.pool.submit(
-                lambda worker, genome: worker.run.remote(genome), genome)
+                lambda worker, genome: worker.evaluate.remote(genome=genome), genome)
             population.under_evaluation.append(genome.genome_id)
 
         population.to_evaluate.clear()

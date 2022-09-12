@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Type
 
-from algorithms.map_elites.population import MAPElitesPopulation
-from base.saver import Saver, SaverConfig
+from erpy.algorithms.map_elites.population import MAPElitesPopulation
+from erpy.base.saver import SaverConfig, Saver
 
 
 @dataclass

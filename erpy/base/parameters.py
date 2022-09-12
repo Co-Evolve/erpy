@@ -22,6 +22,21 @@ class Parameter(metaclass=abc.ABCMeta):
         return eq
 
 
+class FixedParameter(Parameter):
+    def __init__(self, value: T) -> None:
+        super().__init__(value)
+
+    @property
+    def value(self) -> T:
+        return self._value
+
+    def __eq__(self, other: Parameter) -> bool:
+        eq = self.value == other.value
+        if isinstance(eq, Iterable):
+            eq = all(eq)
+        return eq
+
+
 class ContinuousParameter(Parameter):
     def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[float] = None) -> None:
         super(ContinuousParameter, self).__init__(value=value)

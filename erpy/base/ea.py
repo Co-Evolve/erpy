@@ -1,20 +1,16 @@
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
 
-from base.evaluator import EvaluatorConfig
-from base.genome import GenomeConfig
-from base.logger import LoggerConfig
-from base.population import PopulationConfig
-from base.reproducer import ReproducerConfig
-from base.saver import SaverConfig
-from base.selector import SelectorConfig
+from erpy.base.evaluator import EvaluatorConfig
+from erpy.base.logger import LoggerConfig
+from erpy.base.population import PopulationConfig
+from erpy.base.reproducer import ReproducerConfig
+from erpy.base.saver import SaverConfig
+from erpy.base.selector import SelectorConfig
 
 
 @dataclass
 class EAConfig:
     num_generations: int
-    genome_config: GenomeConfig
     population_config: PopulationConfig
     evaluator_config: EvaluatorConfig
     selector_config: SelectorConfig
@@ -39,6 +35,8 @@ class EA:
         return self._config
 
     def run(self) -> None:
+        self.reproducer.initialise_population(self.population)
+
         for generation in range(self._config.num_generations):
             self.population.generation = generation
             self.reproducer.reproduce(population=self.population)

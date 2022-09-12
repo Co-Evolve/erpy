@@ -3,7 +3,7 @@ import abc
 from dataclasses import dataclass
 from typing import Type
 
-from base.population import Population
+from erpy.base.population import Population
 
 
 @dataclass

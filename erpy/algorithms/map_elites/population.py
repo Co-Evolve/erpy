@@ -6,11 +6,11 @@ from typing import Dict, Type
 
 import numpy as np
 
-from algorithms.map_elites.map_elites import MAPElitesCell
-from algorithms.map_elites.types import CellIndex
-from base.evaluator import EvaluationResult
-from base.genome import RobotGenome
-from base.population import PopulationConfig, Population
+from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
+from erpy.algorithms.map_elites.types import CellIndex
+from erpy.base.evaluator import EvaluationResult
+from erpy.base.genome import RobotGenome
+from erpy.base.population import Population, PopulationConfig
 
 
 @dataclass
@@ -32,7 +32,7 @@ class MAPElitesPopulation(Population):
 
     @property
     def config(self) -> MAPElitesPopulationConfig:
-        return self.config
+        return super().config
 
     def _add_to_archive(self, evaluation_result: EvaluationResult) -> None:
         genome = self.genomes[evaluation_result.genome_id]

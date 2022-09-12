@@ -1,32 +1,34 @@
 from __future__ import annotations
 
 import abc
+from abc import ABC
 from typing import Tuple, Union
 
 import numpy as np
 from dm_control import composer, mjcf
 
-from base.phenome import Morphology, Robot
-from base.specification import MorphologySpecification, RobotSpecification
+from erpy.base.phenome import Morphology, Robot
+from erpy.base.specification import MorphologySpecification, RobotSpecification
 
 
-class MJCRobot(Robot, metaclass=abc.ABCMeta):
+class MJCRobot(Robot, ABC):
     def __init__(self, specification: RobotSpecification):
         super().__init__(specification)
 
     @property
     def morphology(self) -> MJCMorphology:
-        return self.morphology
+        return super().morphology
 
 
 class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
     def __init__(self, specification: MorphologySpecification) -> None:
         self._mjcf_model = mjcf.RootElement()
-        super().__init__(specification=specification)
+        Morphology.__init__(self, specification)
+        composer.Entity.__init__(self)
 
     @property
     def specification(self) -> MorphologySpecification:
-        return self._parent.specification
+        return self._specification
 
     @property
     def actuators(self) -> Tuple[mjcf.Element]:
@@ -40,6 +42,10 @@ class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
     def mjcf_model(self) -> mjcf.RootElement:
         return self._mjcf_model
 
+    @abc.abstractmethod
+    def after_attachment(self) -> None:
+        raise NotImplementedError
+
 
 class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
     def __init__(self, parent: Union[MJCMorphology, MJCMorphologyPart],
@@ -47,12 +53,12 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
                  pos: np.array,
                  euler: np.array,
                  *args, **kwargs) -> None:
-        super().__init__(self.specification)
         self._parent = parent
         self._mjcf_body = parent.mjcf_body.add('body',
                                                name=name,
                                                pos=pos,
                                                euler=euler)
+        super().__init__(self.specification)
         self._build(*args, **kwargs)
 
     @property
