@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Callable, Tuple, Iterable, List, Dict, Any, Type
+from typing import Callable, Iterable, List, Dict, Any, Type, TYPE_CHECKING
 
 import numpy as np
 
-from brb.tasks.task_config import TaskConfig
+from erpy.base.environment import EnvironmentConfig
 from erpy.base.genome import RobotGenome
 from erpy.base.phenome import Robot
 from erpy.base.population import Population
-from erpy.base.types import Environment
+
+if TYPE_CHECKING:
+    from erpy.base.ea import EAConfig
 
 
 @dataclass
@@ -22,15 +24,13 @@ class EvaluationResult:
 
 @dataclass
 class EvaluatorConfig(metaclass=abc.ABCMeta):
-    # todo: TaskConfig is from BRB -> should be independent of BRB
-    make_env_fn: Callable[[TaskConfig, Robot], Tuple[Environment]]
+    environment_config: EnvironmentConfig
     robot: Type[Robot]
     reward_aggregator: Callable[[Iterable[float]], float]
     episode_aggregator: Callable[[Iterable[float]], float]
     callbacks: List[Type[EvaluationCallback]]
     num_eval_episodes: int
     render: bool
-    task_config: TaskConfig
 
     @property
     @abc.abstractmethod
@@ -39,8 +39,9 @@ class EvaluatorConfig(metaclass=abc.ABCMeta):
 
 
 class Evaluator(metaclass=abc.ABCMeta):
-    def __init__(self, config: EvaluatorConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.evaluator_config
 
     @abc.abstractmethod
     def evaluate(self, population: Population) -> None:

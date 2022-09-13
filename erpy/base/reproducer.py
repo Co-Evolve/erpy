@@ -3,10 +3,13 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass
 from itertools import count
-from typing import Type
+from typing import Type, TYPE_CHECKING
 
 from erpy.base import genome
 from erpy.base.population import Population
+
+if TYPE_CHECKING:
+    from erpy.base.ea import EAConfig
 
 
 @dataclass
@@ -20,8 +23,9 @@ class ReproducerConfig:
 
 
 class Reproducer(metaclass=abc.ABCMeta):
-    def __init__(self, config: ReproducerConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.reproducer_config
         self._genome_indexer = count(0)
 
     @abc.abstractmethod

@@ -8,6 +8,7 @@ from typing import Callable, Type, cast
 from ray.util import ActorPool
 from tqdm import tqdm
 
+from erpy.base.ea import EAConfig
 from erpy.base.evaluator import EvaluatorConfig, EvaluationActor, Evaluator
 from erpy.base.population import Population
 
@@ -20,20 +21,20 @@ class DistributedEvaluatorConfig(EvaluatorConfig, ABC):
 
 
 @dataclass
-class RayEvaluatorConfig(DistributedEvaluatorConfig):
+class RayDistributedEvaluatorConfig(DistributedEvaluatorConfig):
     @property
     def evaluator(self) -> Type[RayDistributedEvaluator]:
         return RayDistributedEvaluator
 
 
 class RayDistributedEvaluator(Evaluator):
-    def __init__(self, config: RayEvaluatorConfig) -> None:
+    def __init__(self, config: EAConfig) -> None:
         super(RayDistributedEvaluator, self).__init__(config=config)
 
         self.pool: ActorPool = self._build_pool()
 
     @property
-    def config(self) -> RayEvaluatorConfig:
+    def config(self) -> RayDistributedEvaluatorConfig:
         return super().config
 
     def _build_pool(self) -> ActorPool:

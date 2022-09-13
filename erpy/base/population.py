@@ -3,10 +3,14 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass
 from itertools import count
-from typing import List, Dict, Type
+from typing import List, Dict, Type, Any, TYPE_CHECKING
 
 import erpy.base.evaluator as evaluator
 import erpy.base.genome as genome
+
+if TYPE_CHECKING:
+    from erpy.base.ea import EAConfig
+
 
 
 @dataclass
@@ -20,12 +24,14 @@ class PopulationConfig:
 
 
 class Population(metaclass=abc.ABCMeta):
-    def __init__(self, config: PopulationConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.population_config
 
         self.generation = 0
+        self._logging_data: Dict[str, Any] = dict()
         self._genome_indexer = count(0)
-        self._genomes: Dict[int, genome.Genome] = {}
+        self._genomes: Dict[int, genome.Genome] = dict()
 
         self._to_maintain: List[int] = []
         self._to_reproduce: List[int] = []
@@ -34,6 +40,10 @@ class Population(metaclass=abc.ABCMeta):
 
         # This should hold the evaluation result of every genome in genomes after Evaluation
         self.evaluation_results: List[evaluator.EvaluationResult] = []
+
+    @property
+    def logging_data(self) -> Dict[str, Any]:
+        return self._logging_data
 
     @property
     def config(self) -> PopulationConfig:

@@ -7,6 +7,7 @@ import seaborn as sns
 import wandb
 
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
+from erpy.base.ea import EAConfig
 from erpy.loggers.wandb_logger import WandBLoggerConfig, WandBLogger
 
 
@@ -21,7 +22,7 @@ class MAPElitesLoggerConfig(WandBLoggerConfig):
 
 
 class MAPElitesLogger(WandBLogger):
-    def __init__(self, config: MAPElitesLoggerConfig):
+    def __init__(self, config: EAConfig):
         super(MAPElitesLogger, self).__init__(config=config)
 
     @property

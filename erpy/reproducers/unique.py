@@ -63,3 +63,5 @@ class UniqueReproducer(Reproducer):
             population.to_evaluate.append(child_genome.genome_id)
 
         population.to_reproduce.clear()
+
+        population.logging_data["UniqueReproducer/number_of_unique_genomes"] = len(self._archive)

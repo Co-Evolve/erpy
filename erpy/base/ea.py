@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from erpy.base.evaluator import EvaluatorConfig
-from erpy.base.logger import LoggerConfig
-from erpy.base.population import PopulationConfig
-from erpy.base.reproducer import ReproducerConfig
-from erpy.base.saver import SaverConfig
-from erpy.base.selector import SelectorConfig
+from erpy.base.evaluator import EvaluatorConfig, Evaluator
+from erpy.base.logger import LoggerConfig, Logger
+from erpy.base.population import PopulationConfig, Population
+from erpy.base.reproducer import ReproducerConfig, Reproducer
+from erpy.base.saver import SaverConfig, Saver
+from erpy.base.selector import SelectorConfig, Selector
 
 
 @dataclass
@@ -18,17 +18,41 @@ class EAConfig:
     logger_config: LoggerConfig
     saver_config: SaverConfig
 
+    @property
+    def population(self) -> Population:
+        return self.population_config.population(self)
+
+    @property
+    def evaluator(self) -> Evaluator:
+        return self.evaluator_config.evaluator(self)
+
+    @property
+    def selector(self) -> Selector:
+        return self.selector_config.selector(self)
+
+    @property
+    def reproducer(self) -> Reproducer:
+        return self.reproducer_config.reproducer(self)
+
+    @property
+    def logger(self) -> Logger:
+        return self.logger_config.logger(self)
+
+    @property
+    def saver(self) -> Saver:
+        return self.saver_config.saver(self)
+
 
 class EA:
     def __init__(self, config: EAConfig):
         self._config = config
 
-        self.population = config.population_config.population(config.population_config)
-        self.evaluator = config.evaluator_config.evaluator(config.evaluator_config)
-        self.selector = config.selector_config.selector(config.selector_config)
-        self.reproducer = config.reproducer_config.reproducer(config.reproducer_config)
-        self.logger = config.logger_config.logger(config.logger_config)
-        self.saver = config.saver_config.saver(config.saver_config)
+        self.population = config.population
+        self.evaluator = config.evaluator
+        self.selector = config.selector
+        self.reproducer = config.reproducer
+        self.logger = config.logger
+        self.saver = config.saver
 
     @property
     def config(self) -> EAConfig:

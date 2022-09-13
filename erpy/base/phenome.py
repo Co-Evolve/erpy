@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-from typing import cast
 
 import numpy as np
 

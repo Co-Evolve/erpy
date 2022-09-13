@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Type
+from typing import Type, TYPE_CHECKING
 
 from erpy.base.population import Population
+
+if TYPE_CHECKING:
+    from erpy.base.ea import EAConfig
 
 
 @dataclass
@@ -16,8 +19,9 @@ class SelectorConfig:
 
 
 class Selector(metaclass=abc.ABCMeta):
-    def __init__(self, config: SelectorConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.selector_config
 
     @abc.abstractmethod
     def select(self, population: Population) -> None:

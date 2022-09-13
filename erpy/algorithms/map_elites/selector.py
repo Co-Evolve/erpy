@@ -6,6 +6,7 @@ from typing import Type
 import numpy as np
 
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
+from erpy.base.ea import EAConfig
 from erpy.base.selector import SelectorConfig, Selector
 
 
@@ -17,7 +18,7 @@ class MAPElitesSelectorConfig(SelectorConfig):
 
 
 class MAPElitesSelector(Selector):
-    def __init__(self, config: MAPElitesSelectorConfig) -> None:
+    def __init__(self, config: EAConfig) -> None:
         super(MAPElitesSelector, self).__init__(config=config)
 
     def select(self, population: MAPElitesPopulation) -> None:

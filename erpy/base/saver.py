@@ -1,9 +1,12 @@
 from __future__ import annotations
 import abc
 from dataclasses import dataclass
-from typing import Type
+from typing import Type, TYPE_CHECKING
 
 from erpy.base.population import Population
+
+if TYPE_CHECKING:
+    from erpy.base.ea import EAConfig
 
 
 @dataclass
@@ -18,8 +21,9 @@ class SaverConfig:
 
 
 class Saver(metaclass=abc.ABCMeta):
-    def __init__(self, config: SaverConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.saver_config
 
     @abc.abstractmethod
     def save(self, population: Population) -> None:

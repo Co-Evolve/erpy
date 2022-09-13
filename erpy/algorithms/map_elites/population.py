@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Type
+from typing import Dict, Type, List
 
 import numpy as np
 
 from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.algorithms.map_elites.types import CellIndex
+from erpy.base.ea import EAConfig
 from erpy.base.evaluator import EvaluationResult
 from erpy.base.genome import RobotGenome
 from erpy.base.population import Population, PopulationConfig
@@ -15,7 +16,7 @@ from erpy.base.population import Population, PopulationConfig
 
 @dataclass
 class MAPElitesPopulationConfig(PopulationConfig):
-    archive_dimensions: np.ndarray
+    archive_dimensions: List[int]
     morphological_innovation_protection: bool
 
     @property
@@ -24,7 +25,7 @@ class MAPElitesPopulationConfig(PopulationConfig):
 
 
 class MAPElitesPopulation(Population):
-    def __init__(self, config: MAPElitesPopulationConfig) -> None:
+    def __init__(self, config: EAConfig) -> None:
         super(MAPElitesPopulation, self).__init__(config=config)
 
         self._archive: Dict[CellIndex, MAPElitesCell] = dict()
@@ -38,7 +39,7 @@ class MAPElitesPopulation(Population):
         genome = self.genomes[evaluation_result.genome_id]
         descriptor = evaluation_result.info["phenome_descriptor"]
 
-        archive_dimensions = self.config.archive_dimensions
+        archive_dimensions = np.asarray(self.config.archive_dimensions)
         cell_index = tuple(
             np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=0).astype(int))
 

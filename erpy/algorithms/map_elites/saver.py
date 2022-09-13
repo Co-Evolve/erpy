@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Type
 
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
+from erpy.base.ea import EAConfig
 from erpy.base.saver import SaverConfig, Saver
 
 
@@ -16,7 +17,7 @@ class MAPElitesSaverConfig(SaverConfig):
 
 
 class MAPElitesSaver(Saver):
-    def __init__(self, config: SaverConfig):
+    def __init__(self, config: EAConfig):
         super(MAPElitesSaver, self).__init__(config=config)
 
         self.output_path = Path(self.config.save_path)
