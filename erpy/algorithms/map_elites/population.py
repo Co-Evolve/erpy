@@ -40,7 +40,7 @@ class MAPElitesPopulation(Population):
 
         archive_dimensions = self.config.archive_dimensions
         cell_index = tuple(
-            np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=1).astype(int))
+            np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=0).astype(int))
 
         if cell_index in self._archive:
             cell = self._archive[cell_index]

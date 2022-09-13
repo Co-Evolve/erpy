@@ -13,6 +13,7 @@ from erpy.loggers.wandb_logger import WandBLoggerConfig, WandBLogger
 @dataclass
 class MAPElitesLoggerConfig(WandBLoggerConfig):
     archive_dimension_labels: List[str]
+    normalize_heatmaps: bool
 
     @property
     def logger(self) -> Type[WandBLogger]:
@@ -51,15 +52,15 @@ class MAPElitesLogger(WandBLogger):
                     fitness_map[x, y] = fitness
 
             mask = fitness_map == 0
-            fitness_map /= np.max(fitness_map)
-            fitness_map[mask] = 0
+            if self.config.normalize_heatmaps:
+                fitness_map /= np.max(fitness_map)
 
             ax = sns.heatmap(fitness_map, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
                              yticklabels=[0] + [None] * (y_dim - 2) + [1],
                              vmin=0,
                              vmax=np.max(fitness_map))
             ax.set_xlabel(self.config.archive_dimension_labels[0])
-            ax.set_xlabel(self.config.archive_dimension_labels[1])
+            ax.set_ylabel(self.config.archive_dimension_labels[1])
             ax.invert_yaxis()
 
             wandb.log({'archive/coverage': coverage,
