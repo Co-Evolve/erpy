@@ -21,8 +21,8 @@ class MJCRobot(Robot, ABC):
 
 
 class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
-    def __init__(self, specification: MorphologySpecification) -> None:
-        self._mjcf_model = mjcf.RootElement()
+    def __init__(self, specification: MorphologySpecification, model_name: str = 'robot') -> None:
+        self._mjcf_model = mjcf.RootElement(model=model_name)
         Morphology.__init__(self, specification)
         composer.Entity.__init__(self)
 
