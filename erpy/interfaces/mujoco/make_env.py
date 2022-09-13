@@ -3,10 +3,10 @@ from typing import Tuple
 from dm_control import composer
 from stable_baselines3.common.monitor import Monitor
 
+from brb.tasks.task_config import TaskConfig
 from erpy.base.types import Environment
 from erpy.interfaces.mujoco.gym_wrapper import DMC2GymWrapper
 from erpy.interfaces.mujoco.phenome import MJCRobot
-from tasks.task_config import TaskConfig
 
 
 def default_make_mjc_env(config: TaskConfig, robot: MJCRobot) -> Tuple[Environment]:

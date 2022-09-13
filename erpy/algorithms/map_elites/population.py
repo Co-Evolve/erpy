@@ -39,7 +39,8 @@ class MAPElitesPopulation(Population):
         descriptor = evaluation_result.info["phenome_descriptor"]
 
         archive_dimensions = self.config.archive_dimensions
-        cell_index = tuple(np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=1))
+        cell_index = tuple(
+            np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=1).astype(int))
 
         if cell_index in self._archive:
             cell = self._archive[cell_index]

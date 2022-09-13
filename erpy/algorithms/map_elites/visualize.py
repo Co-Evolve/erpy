@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from brb.utils.video import create_video
+from erpy.utils.video import create_video
 
 if __name__ == '__main__':
     base_path = Path("/Users/driesmarzougui/phd/experiments/BRB/data/ventral_curvature_archive")

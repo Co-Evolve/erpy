@@ -2,10 +2,10 @@ from typing import Type
 
 import ray
 
+from erpy.utils.video import create_video
 from erpy.base.evaluator import EvaluatorConfig, EvaluationResult, EvaluationActor
 from erpy.base.genome import RobotGenome
 from erpy.evaluators.ray.evaluator import DistributedEvaluatorConfig
-from utils.video import create_video
 
 
 def make_base_evaluation_actor(config: DistributedEvaluatorConfig) -> Type[EvaluationActor]:
