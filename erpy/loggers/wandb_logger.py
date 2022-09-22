@@ -54,7 +54,7 @@ class WandBLogger(Logger):
                         f'{name}_std': np.std(values)}, step=step)
 
     def _log_value(self, name: str, value: Union[float, int], step: int) -> None:
-        self.wandb.log({{name}: value}, step=step)
+        self.wandb.log({name: value}, step=step)
 
     def _log_unknown(self, name: str, data: Any, step: int) -> None:
         if isinstance(data, Iterable):
@@ -62,16 +62,24 @@ class WandBLogger(Logger):
         else:
             self._log_value(name=name, value=data, step=step)
 
-    def log(self, population: Population) -> None:
+    def _log_fitness(self, population: Population) -> None:
         fitnesses = [er.fitness for er in population.evaluation_results]
         self._log_values(name='generation/fitness', values=fitnesses, step=population.generation)
 
-        genome_ids = [er.genome_id for er in population.evaluation_results]
-        genomes = [population.genomes[genome_id] for genome_id in genome_ids]
-
-        ages = [genome.age for genome in genomes]
-        self._log_values(name='generation/age', values=ages, step=population.generation)
-
+    def _log_population_data(self, population: Population) -> None:
         for name, data in population.logging_data:
             self._log_unknown(name=name, data=data, step=population.generation)
         population.logging_data.clear()
+
+    def _log_evaluation_result_data(self, population: Population) -> None:
+        # log info from evaluation result's info
+        er_log_keys = [key for key in population.evaluation_results[0].info.keys() if key.startswith('logging_')]
+        for key in er_log_keys:
+            name = "evaluation_results/" + key.replace("logging_", "")
+            values = [er.info[key] for er in population.evaluation_results]
+            self._log_unknown(name=name, data=values, step=population.generation)
+
+    def log(self, population: Population) -> None:
+        self._log_fitness(population)
+        self._log_population_data(population)
+        self._log_evaluation_result_data(population)

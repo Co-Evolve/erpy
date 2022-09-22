@@ -21,6 +21,10 @@ class Parameter(metaclass=abc.ABCMeta):
             eq = all(eq)
         return eq
 
+    @value.setter
+    def value(self, value):
+        self._value = value
+
 
 class FixedParameter(Parameter):
     def __init__(self, value: T) -> None:
@@ -36,6 +40,10 @@ class FixedParameter(Parameter):
             eq = all(eq)
         return eq
 
+    @value.setter
+    def value(self, value):
+        self._value = value
+
 
 class ContinuousParameter(Parameter):
     def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[float] = None) -> None:
@@ -47,27 +55,39 @@ class ContinuousParameter(Parameter):
     def value(self) -> float:
         if self._value is None:
             self._value = np.random.uniform(low=self.low, high=self.high)
+
+        self._value = np.clip(self._value, self.low, self.high)
         return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
 
 class RangeParameter(Parameter):
-    def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[np.ndarray] = None) -> None:
+    def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[np.ndarray] = None,
+                 sorted: bool = False) -> None:
         super(RangeParameter, self).__init__(value)
         self.low = low
         self.high = high
+        self.sorted = sorted
 
     @property
     def value(self) -> np.ndarray:
         if self._value is None:
             self._value = np.random.uniform(low=self.low, high=self.high, size=2)
 
-        self._value = np.sort(self._value)
         self._value = self._value.clip(self.low, self.high)
+
+        if self.sorted:
+            self._value = sorted(np.array(self._value))
 
         return self._value
 
     @value.setter
     def value(self, value):
+        assert self.low <= self.value <= self.high, f"[RangeParameter] Given value '{value}' is " \
+                                                    f"not in range [{self.low}, {self.high}]"
         self._value = value
 
 
@@ -81,6 +101,11 @@ class DiscreteParameter(Parameter):
         if self._value is None:
             self._value = np.random.choice(a=self.options)
         return self._value
+
+    @value.setter
+    def value(self, value):
+        assert value in self.options, f"[DiscreteParameter] Given value '{value}' is not in options '{self.options}'"
+        self._value = value
 
 
 class MultiDiscreteParameter(Parameter):
@@ -103,4 +128,6 @@ class MultiDiscreteParameter(Parameter):
 
     @value.setter
     def value(self, value):
+        for v in value:
+            assert v in self.options, f"[MultiDiscreteParameter] Given value '{v}' is not in options '{self.options}'"
         self._value = value

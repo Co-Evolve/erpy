@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Dict, Any, Type, TYPE_CHECKING
+from typing import Callable, Iterable, List, Dict, Any, Type, TYPE_CHECKING, Optional
 
+import gym
 import numpy as np
 
 from erpy.base.environment import EnvironmentConfig
-from erpy.base.genome import RobotGenome
+from erpy.base.genome import Genome
 from erpy.base.phenome import Robot
 from erpy.base.population import Population
 
@@ -29,8 +30,8 @@ class EvaluatorConfig(metaclass=abc.ABCMeta):
     reward_aggregator: Callable[[Iterable[float]], float]
     episode_aggregator: Callable[[Iterable[float]], float]
     callbacks: List[Type[EvaluationCallback]]
+    analyze_callbacks: List[Type[EvaluationCallback]]
     num_eval_episodes: int
-    render: bool
 
     @property
     @abc.abstractmethod
@@ -44,7 +45,7 @@ class Evaluator(metaclass=abc.ABCMeta):
         self._config = config.evaluator_config
 
     @abc.abstractmethod
-    def evaluate(self, population: Population) -> None:
+    def evaluate(self, population: Population, analyze: bool = False) -> None:
         raise NotImplementedError
 
     @property
@@ -53,8 +54,9 @@ class Evaluator(metaclass=abc.ABCMeta):
 
 
 class EvaluationActor(metaclass=abc.ABCMeta):
-    def __init__(self, config: EvaluatorConfig) -> None:
-        self._config = config
+    def __init__(self, config: EAConfig) -> None:
+        self._ea_config = config
+        self._config = config.evaluator_config
         self._callback_handler = EvaluationCallbackHandler(config=config)
 
     @property
@@ -62,7 +64,7 @@ class EvaluationActor(metaclass=abc.ABCMeta):
         return self._config
 
     @abc.abstractmethod
-    def evaluate(self, genome: RobotGenome) -> EvaluationResult:
+    def evaluate(self, genome: Genome, analyze: bool = False) -> EvaluationResult:
         raise NotImplementedError
 
     @property
@@ -71,9 +73,18 @@ class EvaluationActor(metaclass=abc.ABCMeta):
 
 
 class EvaluationCallback(metaclass=abc.ABCMeta):
-    def __init__(self, name='str') -> None:
+    def __init__(self, config: EAConfig, name: str = 'unnamed') -> None:
+        self._ea_config = config
+        self._config = config.evaluator_config
         self._name = name
         self._data = None
+
+    @property
+    def config(self) -> EvaluatorConfig:
+        return self._config
+
+    def from_env(self, env: gym.Env) -> None:
+        pass
 
     def before_episode(self):
         pass
@@ -84,13 +95,13 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
     def from_robot(self, robot: Robot):
         pass
 
-    def from_genome(self, genome: RobotGenome):
+    def from_genome(self, genome: Genome):
         pass
 
     def before_step(self, observations, actions):
         pass
 
-    def after_step(self, observations, actions):
+    def after_step(self, observations, actions, info=None):
         pass
 
     def update_evaluation_result(self, evaluation_result: EvaluationResult) -> EvaluationResult:
@@ -107,13 +118,27 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
 
 
 class EvaluationCallbackHandler:
-    def __init__(self, config: EvaluatorConfig):
-        self._config = config
+    def __init__(self, config: EAConfig):
+        self._ea_config = config
+        self._config = config.evaluator_config
         self.callbacks = []
         self.reset()
 
-    def reset(self) -> None:
-        self.callbacks = [callback() for callback in self._config.callbacks]
+    @property
+    def config(self) -> EvaluatorConfig:
+        return self._config
+
+    def reset(self, analyze: bool = False) -> None:
+        if analyze:
+            cbs = self.config.analyze_callbacks
+        else:
+            cbs = self.config.callbacks
+
+        self.callbacks = [callback(config=self._ea_config) for callback in cbs]
+
+    def from_env(self, env: gym.Env) -> None:
+        for callback in self.callbacks:
+            callback.from_env(env=env)
 
     def before_episode(self) -> None:
         for callback in self.callbacks:
@@ -123,7 +148,7 @@ class EvaluationCallbackHandler:
         for callback in self.callbacks:
             callback.after_episode()
 
-    def from_genome(self, genome: RobotGenome) -> None:
+    def from_genome(self, genome: Genome) -> None:
         for callback in self.callbacks:
             callback.from_genome(genome)
 
@@ -135,9 +160,9 @@ class EvaluationCallbackHandler:
         for callback in self.callbacks:
             callback.before_step(observations=observations, actions=actions)
 
-    def after_step(self, observations: np.ndarray, actions: np.ndarray) -> None:
+    def after_step(self, observations: np.ndarray, actions: np.ndarray, info: Optional[Dict] = None) -> None:
         for callback in self.callbacks:
-            callback.after_step(observations=observations, actions=actions)
+            callback.after_step(observations=observations, actions=actions, info=info)
 
     def update_evaluation_result(self, evaluation_result: EvaluationResult) -> EvaluationResult:
         for callback in self.callbacks:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from erpy.base.evaluator import EvaluatorConfig, Evaluator
 from erpy.base.logger import LoggerConfig, Logger
@@ -47,16 +48,52 @@ class EA:
     def __init__(self, config: EAConfig):
         self._config = config
 
-        self.population = config.population
-        self.evaluator = config.evaluator
-        self.selector = config.selector
-        self.reproducer = config.reproducer
-        self.logger = config.logger
-        self.saver = config.saver
+        self._population = None
+        self._evaluator = None
+        self._selector = None
+        self._reproducer = None
+        self._logger = None
+        self._saver = None
 
     @property
     def config(self) -> EAConfig:
         return self._config
+
+    @property
+    def population(self) -> Population:
+        if self._population is None:
+            self._population = self.config.population
+        return self._population
+
+    @property
+    def evaluator(self) -> Evaluator:
+        if self._evaluator is None:
+            self._evaluator = self.config.evaluator
+        return self._evaluator
+
+    @property
+    def selector(self) -> Selector:
+        if self._selector is None:
+            self._selector = self.config.selector
+        return self._selector
+
+    @property
+    def reproducer(self) -> Reproducer:
+        if self._reproducer is None:
+            self._reproducer = self.config.reproducer
+        return self._reproducer
+
+    @property
+    def logger(self) -> Logger:
+        if self._logger is None:
+            self._logger = self.config.logger
+        return self._logger
+
+    @property
+    def saver(self) -> Saver:
+        if self._saver is None:
+            self._saver = self.config.saver
+        return self._saver
 
     def run(self) -> None:
         self.reproducer.initialise_population(self.population)
@@ -67,10 +104,21 @@ class EA:
             self.population.before_evaluation()
             self.evaluator.evaluate(population=self.population)
             self.population.after_evaluation()
-
-            if self.logger is not None:
-                self.logger.log(population=self.population)
-            if self.saver is not None:
-                self.saver.save(population=self.population)
-
+            self.logger.log(population=self.population)
+            self.saver.save(population=self.population)
             self.selector.select(population=self.population)
+
+    def analyze(self, path: Optional[str] = None) -> None:
+        if path is not None:
+            self.config.saver_config.save_path = path
+
+        genomes = self.saver.load()
+
+        # Reset population by recreating it
+        self._population = None
+
+        for genome in genomes:
+            self.population.genomes[genome.genome_id] = genome
+            self.population.to_evaluate.append(genome.genome_id)
+
+        self.evaluator.evaluate(self.population, analyze=True)

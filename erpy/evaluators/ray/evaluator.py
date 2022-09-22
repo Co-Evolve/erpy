@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from abc import ABC
 from dataclasses import dataclass
-from typing import Callable, Type, cast
+from typing import Callable, Type, cast, Optional
 
 from ray.util import ActorPool
 from tqdm import tqdm
@@ -22,6 +22,8 @@ class DistributedEvaluatorConfig(EvaluatorConfig, ABC):
 
 @dataclass
 class RayDistributedEvaluatorConfig(DistributedEvaluatorConfig):
+    evaluation_timeout: Optional[int] = None
+
     @property
     def evaluator(self) -> Type[RayDistributedEvaluator]:
         return RayDistributedEvaluator
@@ -38,10 +40,10 @@ class RayDistributedEvaluator(Evaluator):
         return super().config
 
     def _build_pool(self) -> ActorPool:
-        workers = [self.config.actor_generator(self.config).remote(self.config) for _ in range(self.config.num_workers)]
+        workers = [self.config.actor_generator(self._ea_config).remote(self._ea_config) for _ in range(self.config.num_workers)]
         return ActorPool(workers)
 
-    def evaluate(self, population: Population) -> None:
+    def evaluate(self, population: Population, analyze: bool = False) -> None:
         all_genomes = population.genomes
         target_genome_ids = population.to_evaluate
 
@@ -49,7 +51,7 @@ class RayDistributedEvaluator(Evaluator):
 
         for genome in tqdm(target_genomes, desc=f"Gen {population.generation}\t-\tSending jobs to workers."):
             self.pool.submit(
-                lambda worker, genome: worker.evaluate.remote(genome=genome), genome)
+                lambda worker, genome: worker.evaluate.remote(genome=genome, analyze=analyze), genome)
             population.under_evaluation.append(genome.genome_id)
 
         population.to_evaluate.clear()
@@ -62,6 +64,6 @@ class RayDistributedEvaluator(Evaluator):
                 genome = all_genomes[evaluation_result.genome_id]
                 population.evaluation_results.append(evaluation_result)
                 population.under_evaluation.remove(genome.genome_id)
-                timeout = 5
+                timeout = self.config.evaluation_timeout
             except TimeoutError:
                 break

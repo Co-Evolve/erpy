@@ -1,8 +1,10 @@
 from __future__ import annotations
 import abc
 from dataclasses import dataclass
-from typing import Type, TYPE_CHECKING
+from pathlib import Path
+from typing import Type, TYPE_CHECKING, List
 
+from erpy.base.genome import Genome
 from erpy.base.population import Population
 
 if TYPE_CHECKING:
@@ -19,14 +21,25 @@ class SaverConfig:
     def saver(self) -> Type[Saver]:
         raise NotImplementedError
 
+    @property
+    def analysis_path(self) -> str:
+        return str(Path(self.save_path) / "analysis")
+
 
 class Saver(metaclass=abc.ABCMeta):
     def __init__(self, config: EAConfig) -> None:
         self._ea_config = config
         self._config = config.saver_config
 
+    def should_save(self, generation: int) -> bool:
+        return generation % self.config.save_freq == 0
+
     @abc.abstractmethod
     def save(self, population: Population) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def load(self) -> List[Genome]:
         raise NotImplementedError
 
     @property

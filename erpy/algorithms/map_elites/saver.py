@@ -24,7 +24,7 @@ class MAPElitesSaver(Saver):
         self.output_path.mkdir(parents=True, exist_ok=True)
 
     def save(self, population: MAPElitesPopulation) -> None:
-        if population.generation % self.config.save_freq == 0:
+        if self.should_save(population.generation):
             # Save the archive
             output_path = self.output_path / "archive"
             output_path.mkdir(parents=True, exist_ok=True)

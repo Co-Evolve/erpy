@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, List
 
 from dm_control import composer
 from stable_baselines3.common.monitor import Monitor
@@ -12,17 +12,19 @@ from erpy.interfaces.mujoco.gym_wrapper import DMC2GymWrapper
 from erpy.interfaces.mujoco.phenome import MJCRobot
 
 
-def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot) -> Environment:
+def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym: bool = True) -> Environment:
     task = config.task(config, robot.morphology)
-    dm_env = composer.Environment(task=task,
-                                  random_state=config.random_state,
-                                  time_limit=config.simulation_time)
-    env = DMC2GymWrapper(env=dm_env,
-                         seed=config.seed,
-                         from_pixels=False,
-                         camera_ids=[0, 1]
-                         )
-    env = Monitor(env)
+    env = composer.Environment(task=task,
+                               random_state=config.random_state,
+                               time_limit=config.simulation_time)
+
+    if wrap2gym:
+        env = DMC2GymWrapper(env=env,
+                             seed=config.seed,
+                             from_pixels=False,
+                             camera_ids=config.camera_ids
+                             )
+        env = Monitor(env)
     return env
 
 
@@ -32,6 +34,9 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
     @abc.abstractmethod
     def task(self) -> Callable[[MJCEnvironmentConfig, MJCRobot], composer.Task]:
         raise NotImplementedError
+
+    def environment(self, robot: MJCRobot, wrap2gym: bool = True) -> Environment:
+        return default_make_mjc_env(config=self, robot=robot)
 
     @property
     @abc.abstractmethod
@@ -49,13 +54,18 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
         raise NotImplementedError
 
     @property
-    @abc.abstractmethod
-    def physics_time_delta(self) -> float:
-        raise NotImplementedError
+    def control_timestep(self) -> float:
+        return self.num_substeps * self.physics_timestep
 
     @property
-    def num_timesteps(self) -> int:
-        return int(self.simulation_time / (self.physics_time_delta * self.time_scale) / self._num_substeps)
+    def physics_timestep(self) -> float:
+        return self.original_physics_timestep * self.time_scale
 
-    def environment(self, robot: MJCRobot) -> Environment:
-        return default_make_mjc_env(config=self, robot=robot)
+    @property
+    def original_physics_timestep(self) -> float:
+        return 0.002
+
+    @property
+    def camera_ids(self) -> List[int]:
+        return [0]
+
