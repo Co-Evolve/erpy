@@ -32,7 +32,8 @@ class CMAESSaver(Saver):
                 pickle.dump(population.optimizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             # Save the best genome
-            population.best_genome.save(f'elite.pickle')
+            path = Path(self.config.save_path) / f"elite.pickle"
+            population.best_genome.save(path)
 
     def load(self) -> List[ESGenome]:
         elite_path = Path(self.config.save_path) / "elite.pickle"

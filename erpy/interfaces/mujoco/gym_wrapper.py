@@ -67,14 +67,7 @@ class DMC2GymWrapper(core.Env):
         # create task
         self._env = env
 
-        # true and normalized action spaces
-        self._true_action_space = _spec_to_box([self._env.action_spec()], np.float32)
-        self.action_space = spaces.Box(
-            low=-1.0,
-            high=1.0,
-            shape=self._true_action_space.shape,
-            dtype=np.float32
-        )
+        self.action_space = _spec_to_box([self._env.action_spec()], float)
 
         # create observation space
         if from_pixels:
@@ -114,16 +107,6 @@ class DMC2GymWrapper(core.Env):
             obs = _flatten_obs(time_step.observation)
         return obs
 
-    def _convert_action(self, action):
-        action = action.astype(np.float64)
-        true_delta = self._true_action_space.high - self._true_action_space.low
-        norm_delta = self.action_space.high - self.action_space.low
-        action = (action - self.action_space.low) / norm_delta
-        action = action * true_delta + self._true_action_space.low
-        action = action.astype(np.float32)
-        return action
-
-
     @property
     def reward_range(self):
         return self._env.reward_spec()
@@ -131,14 +114,11 @@ class DMC2GymWrapper(core.Env):
     def seed(self, seed=None):
         if seed is None:
             seed = 42
-        self._true_action_space.seed(seed)
         self.action_space.seed(seed)
         self.observation_space.seed(seed)
 
     def step(self, action):
-        #assert self.action_space.contains(action)
-        action = self._convert_action(action)
-        assert self._true_action_space.contains(action)
+        assert self.action_space.contains(action)
         reward = 0
         info = {}  # {'internal_state': self._env.physics.get_state().copy()}
         time_step = self._env.step(action)

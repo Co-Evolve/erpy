@@ -47,3 +47,5 @@ class VideoCallback(EvaluationCallback):
                      out_path=str(path))
 
         self._episode_index += 1
+        self._frames.clear()
+        self._step_index = 0
