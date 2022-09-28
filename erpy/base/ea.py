@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
-from erpy.base.evaluator import EvaluatorConfig, Evaluator
+from erpy.base.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
+from erpy.base.genome import Genome, DummyGenome
 from erpy.base.logger import LoggerConfig, Logger
 from erpy.base.population import PopulationConfig, Population
 from erpy.base.reproducer import ReproducerConfig, Reproducer
 from erpy.base.saver import SaverConfig, Saver
 from erpy.base.selector import SelectorConfig, Selector
+from erpy.base.specification import RobotSpecification
 
 
 @dataclass
@@ -108,12 +110,21 @@ class EA:
             self.saver.save(population=self.population)
             self.selector.select(population=self.population)
 
-    def analyze(self, path: Optional[str] = None) -> None:
+        self._evaluator = None
+
+    def analyze(self, path: Optional[str] = None) -> List[EvaluationResult]:
         if path is not None:
             self.config.saver_config.save_path = path
 
         genomes = self.saver.load()
+        return self.analyze_genomes(genomes)
 
+    def analyze_specifications(self, specifications: List[RobotSpecification]) -> List[EvaluationResult]:
+        genomes = [DummyGenome(genome_id=i, specification=specification) for i, specification in
+                   enumerate(specifications)]
+        return self.analyze_genomes(genomes=genomes)
+
+    def analyze_genomes(self, genomes: List[Genome]) -> List[EvaluationResult]:
         # Reset population by recreating it
         self._population = None
 
@@ -122,3 +133,9 @@ class EA:
             self.population.to_evaluate.append(genome.genome_id)
 
         self.evaluator.evaluate(self.population, analyze=True)
+
+        # Sort evaluation results according to genome order
+        er_genome_ids = [er.genome_id for er in self.population.evaluation_results]
+        er_indices = [er_genome_ids.index(genome.genome_id) for genome in genomes]
+
+        return [self.population.evaluation_results[i] for i in er_indices]

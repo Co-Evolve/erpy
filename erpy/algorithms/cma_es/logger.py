@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Type, List, Optional
+from typing import Type, List, Optional, Callable
 
 import numpy as np
 
@@ -14,6 +14,7 @@ from erpy.loggers.wandb_logger import WandBLogger, WandBLoggerConfig
 @dataclass
 class CMAESLoggerConfig(WandBLoggerConfig):
     parameter_labels: Optional[List[str]]
+    parameter_rescale_function: Callable[[np.ndarray], np.ndarray]
 
     @property
     def logger(self) -> Type[CMAESLogger]:
@@ -31,6 +32,8 @@ class CMAESLogger(WandBLogger):
     def _log_parameters(self, prefix: str, parameters: np.ndarray, step: int) -> None:
         if self.config.parameter_labels is None:
             self.config.parameter_labels = [f"param_{i}" for i in range(len(parameters))]
+
+        parameters = self.config.parameter_rescale_function(parameters)
 
         for name, value in zip(self.config.parameter_labels, parameters):
             self._log_value(name=f'CMA-ES/{prefix}/{name}', value=value, step=step)

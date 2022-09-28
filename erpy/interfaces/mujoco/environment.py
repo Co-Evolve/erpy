@@ -36,7 +36,7 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
         raise NotImplementedError
 
     def environment(self, robot: MJCRobot, wrap2gym: bool = True) -> Environment:
-        return default_make_mjc_env(config=self, robot=robot)
+        return default_make_mjc_env(config=self, robot=robot, wrap2gym=wrap2gym)
 
     @property
     @abc.abstractmethod

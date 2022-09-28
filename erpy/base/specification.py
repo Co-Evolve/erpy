@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import pickle
 from dataclasses import dataclass
 from typing import List, Iterable
 
@@ -23,6 +24,15 @@ class Specification(metaclass=abc.ABCMeta):
             elif isinstance(field, Specification):
                 parameters += field.parameters
         return parameters
+
+    def save(self, path: str):
+        with open(path, 'wb') as handle:
+            pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(path: str) -> Specification:
+        with open(path, 'rb') as handle:
+            return pickle.load(handle)
 
 
 @dataclass

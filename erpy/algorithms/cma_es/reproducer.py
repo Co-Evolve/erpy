@@ -34,6 +34,7 @@ class CMAESReproducer(Reproducer):
     def initialise_population(self, population: CMAESPopulation) -> None:
         options = cma.CMAOptions()
         options.set('bounds', [0, 1])
+        options.set('seed', self._ea_config.evaluator_config.environment_config.seed)
         population.optimizer = cma.CMAEvolutionStrategy(x0=self.config.x0, sigma0=self.config.sigma0,
                                                         inopts=options)
 
