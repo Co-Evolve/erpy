@@ -79,7 +79,13 @@ class WandBLogger(Logger):
             values = [er.info[key] for er in population.evaluation_results]
             self._log_unknown(name=name, data=values, step=population.generation)
 
+    def _log_failures(self, population: Population) -> None:
+        failures = [er.info["episode_failures"] for er in population.evaluation_results]
+        physics_failures = sum([er_failure["physics"] for er_failure in failures])
+        self._log_value(name="episode_failures", value=physics_failures, step=population.generation)
+
     def log(self, population: Population) -> None:
         self._log_fitness(population)
         self._log_population_data(population)
         self._log_evaluation_result_data(population)
+        self._log_failures(population)

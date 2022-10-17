@@ -1,6 +1,7 @@
 from typing import Type
 
 import ray
+from dm_control.rl.control import PhysicsError
 
 from erpy.base.ea import EAConfig
 from erpy.base.evaluator import EvaluatorConfig, EvaluationResult, EvaluationActor
@@ -29,36 +30,41 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
 
             episode_fitnesses = []
             episode_frames = []
+            physics_failures = 0
             for episode in range(self.config.num_eval_episodes):
-                self.callback_handler.before_episode()
+                try:
+                    self.callback_handler.before_episode()
 
-                robot.reset()
-                observations = env.reset()
+                    robot.reset()
+                    observations = env.reset()
 
-                frames = []
-                rewards = []
+                    frames = []
+                    rewards = []
 
-                done = False
-                while not done:
-                    actions = robot(observations)
+                    done = False
+                    while not done:
+                        actions = robot(observations)
 
-                    self.callback_handler.before_step(observations=observations, actions=actions)
-                    observations, reward, done, info = env.step(actions)
+                        self.callback_handler.before_step(observations=observations, actions=actions)
+                        observations, reward, done, info = env.step(actions)
 
-                    self.callback_handler.after_step(observations=observations, actions=actions, info=info)
+                        self.callback_handler.after_step(observations=observations, actions=actions, info=info)
 
-                    rewards.append(reward)
+                        rewards.append(reward)
 
-                self.callback_handler.after_episode()
+                    self.callback_handler.after_episode()
 
-                episode_fitness = self.config.reward_aggregator(rewards)
-                episode_fitnesses.append(episode_fitness)
+                    episode_fitness = self.config.reward_aggregator(rewards)
+                    episode_fitnesses.append(episode_fitness)
 
-                episode_frames.append(frames)
+                    episode_frames.append(frames)
+                except PhysicsError:
+                    physics_failures += 1
 
             env.close()
             fitness = self.config.episode_aggregator(episode_fitnesses)
-            evaluation_result = EvaluationResult(genome_id=genome.genome_id, fitness=fitness, info=dict())
+            evaluation_result = EvaluationResult(genome_id=genome.genome_id, fitness=fitness,
+                                                 info={"episode_failures": {"physics": physics_failures}})
             evaluation_result = self.callback_handler.update_evaluation_result(evaluation_result)
 
             return evaluation_result

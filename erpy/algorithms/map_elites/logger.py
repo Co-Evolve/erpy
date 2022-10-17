@@ -30,6 +30,9 @@ class MAPElitesLogger(WandBLogger):
         return super().config
 
     def log(self, population: MAPElitesPopulation) -> None:
+        # Log failed episodes
+        super()._log_failures(population=population)
+
         # Log archive fitnesses
         fitnesses = [cell.evaluation_result.fitness for cell in population.archive.values()]
         super()._log_values(name='archive/fitness', values=fitnesses, step=population.generation)
