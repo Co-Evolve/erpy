@@ -61,6 +61,7 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
                 except PhysicsError:
                     physics_failures += 1
                     env.close()
+                    robot = self.config.robot(genome.specification)
                     env = self.config.environment_config.environment(robot=robot)
 
             env.close()
