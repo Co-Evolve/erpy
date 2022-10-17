@@ -60,6 +60,8 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
                     episode_frames.append(frames)
                 except PhysicsError:
                     physics_failures += 1
+                    env.close()
+                    env = self.config.environment_config.environment(robot=robot)
 
             env.close()
             fitness = self.config.episode_aggregator(episode_fitnesses)
