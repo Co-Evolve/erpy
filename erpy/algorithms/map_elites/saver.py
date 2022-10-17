@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Type
+from typing import Type, List
 
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
 from erpy.base.ea import EAConfig
+from erpy.base.genome import Genome
 from erpy.base.saver import SaverConfig, Saver
 
 
@@ -34,3 +35,6 @@ class MAPElitesSaver(Saver):
                     cell_path = str(output_path / f"cell_{str(descriptor)}")
                     cell.genome.save(cell_path)
                     cell.should_save = False
+
+    def load(self) -> List[Genome]:
+        raise NotImplementedError

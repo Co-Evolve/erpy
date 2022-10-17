@@ -10,7 +10,7 @@ from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.algorithms.map_elites.types import CellIndex
 from erpy.base.ea import EAConfig
 from erpy.base.evaluator import EvaluationResult
-from erpy.base.genome import RobotGenome
+from erpy.base.genome import Genome
 from erpy.base.population import Population, PopulationConfig
 
 
@@ -40,8 +40,7 @@ class MAPElitesPopulation(Population):
         descriptor = evaluation_result.info["phenome_descriptor"]
 
         archive_dimensions = np.asarray(self.config.archive_dimensions)
-        cell_index = tuple(
-            np.min((np.floor(descriptor * archive_dimensions), archive_dimensions - 1), axis=0).astype(int))
+        cell_index = tuple(np.rint(descriptor * (archive_dimensions - 1)).astype(int))
 
         if cell_index in self._archive:
             cell = self._archive[cell_index]
@@ -73,7 +72,7 @@ class MAPElitesPopulation(Population):
         return coverage
 
     @property
-    def genomes(self) -> Dict[int, RobotGenome]:
+    def genomes(self) -> Dict[int, Genome]:
         # Update the current _genomes datastructure with the current archive
         archive_genomes = {cell.genome.genome_id: cell.genome for cell in self._archive.values()}
         self._genomes.update(archive_genomes)

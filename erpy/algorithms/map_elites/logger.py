@@ -47,7 +47,7 @@ class MAPElitesLogger(WandBLogger):
             fitness_map = np.zeros((x_dim, y_dim))
 
             for cell_index, cell in population.archive.items():
-                x, y = cell_index
+                y, x = cell_index
                 fitness = cell.evaluation_result.fitness
                 if abs(fitness) != np.inf:
                     fitness_map[x, y] = fitness
