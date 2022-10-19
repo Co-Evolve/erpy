@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional, List
 
 from erpy.base.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
@@ -20,6 +21,9 @@ class EAConfig:
     reproducer_config: ReproducerConfig
     logger_config: LoggerConfig
     saver_config: SaverConfig
+
+    from_checkpoint: bool = False
+    checkpoint_path: str = None
 
     @property
     def population(self) -> Population:
@@ -98,7 +102,12 @@ class EA:
         return self._saver
 
     def run(self) -> None:
-        self.reproducer.initialise_population(self.population)
+        if self.config.from_checkpoint:
+            self.saver.load_checkpoint(checkpoint_path=self.config.checkpoint_path,
+                                       population=self.population)
+            self.selector.select(population=self.population)
+        else:
+            self.reproducer.initialise_population(self.population)
 
         for generation in range(self._config.num_generations):
             self.population.generation = generation

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,6 +41,10 @@ class Saver(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def load(self) -> List[Genome]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def load_checkpoint(self, checkpoint_path: str, population: Population) -> None:
         raise NotImplementedError
 
     @property

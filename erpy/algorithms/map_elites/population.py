@@ -53,7 +53,8 @@ class MAPElitesPopulation(Population):
                 # The occupant is a different genome
                 if cell.evaluation_result.fitness <= evaluation_result.fitness:
                     # New genome is better -> replace the old one
-                    self._archive[cell_index] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
+                    self._archive[cell_index] = MAPElitesCell(descriptor=cell_index, genome=genome,
+                                                              evaluation_result=evaluation_result)
                     self._archive[cell_index].should_save = True
                 elif self.config.morphological_innovation_protection and cell.genome.age > genome.age:
                     # Morphological innovation protection:
@@ -62,7 +63,8 @@ class MAPElitesPopulation(Population):
                     self.to_evaluate.append(genome.genome_id)
         else:
             # Cell is still empty -> place the genome in it
-            self._archive[cell_index] = MAPElitesCell(genome=genome, evaluation_result=evaluation_result)
+            self._archive[cell_index] = MAPElitesCell(descriptor=cell_index, genome=genome,
+                                                      evaluation_result=evaluation_result)
             self._archive[cell_index].should_save = True
 
     @property
