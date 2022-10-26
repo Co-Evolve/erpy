@@ -32,6 +32,7 @@ class EvaluatorConfig(metaclass=abc.ABCMeta):
     callbacks: List[Type[EvaluationCallback]]
     analyze_callbacks: List[Type[EvaluationCallback]]
     num_eval_episodes: int
+    hard_episode_reset: bool
 
     @property
     @abc.abstractmethod

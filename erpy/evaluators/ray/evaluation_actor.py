@@ -22,11 +22,7 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
             self.callback_handler.reset(analyze=analyze)
             self.callback_handler.from_genome(genome)
 
-            robot = self.config.robot(genome.specification)
-            self.callback_handler.from_robot(robot)
-
-            env = self.config.environment_config.environment(robot=robot)
-            self.callback_handler.from_env(env)
+            robot, env = None, None
 
             episode_fitnesses = []
             episode_frames = []
@@ -34,6 +30,13 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
             for episode in range(self.config.num_eval_episodes):
                 try:
                     self.callback_handler.before_episode()
+
+                    if robot is None or self.config.hard_episode_reset:
+                        robot = self.config.robot(genome.specification)
+                        self.callback_handler.from_robot(robot)
+
+                        env = self.config.environment_config.environment(robot=robot)
+                        self.callback_handler.from_env(env)
 
                     robot.reset()
                     observations = env.reset()

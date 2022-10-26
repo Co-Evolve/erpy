@@ -49,4 +49,4 @@ class EnvironmentConfig(metaclass=abc.ABCMeta):
 
     @property
     def num_timesteps(self) -> int:
-        return int(self.simulation_time / self.control_timestep)
+        return int(np.ceil(self.simulation_time / self.control_timestep))
