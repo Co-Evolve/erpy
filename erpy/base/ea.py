@@ -104,7 +104,8 @@ class EA:
     def run(self) -> None:
         if self.config.from_checkpoint:
             self.saver.load_checkpoint(checkpoint_path=self.config.checkpoint_path,
-                                       population=self.population)
+                                       population=self.population,
+                                       reproducer=self._reproducer)
             self.selector.select(population=self.population)
         else:
             self.reproducer.initialise_population(self.population)

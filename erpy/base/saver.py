@@ -7,6 +7,7 @@ from typing import Type, TYPE_CHECKING, List
 
 from erpy.base.genome import Genome
 from erpy.base.population import Population
+from erpy.base.reproducer import Reproducer
 
 if TYPE_CHECKING:
     from erpy.base.ea import EAConfig
@@ -44,7 +45,8 @@ class Saver(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load_checkpoint(self, checkpoint_path: str, population: Population) -> None:
+    def load_checkpoint(self, checkpoint_path: str, population: Population,
+                        reproducer: Reproducer) -> None:
         raise NotImplementedError
 
     @property

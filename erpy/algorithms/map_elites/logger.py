@@ -47,13 +47,13 @@ class MAPElitesLogger(WandBLogger):
         # Log a 2D heatmap
         if len(population.config.archive_dimensions) == 2:
             x_dim, y_dim = population.config.archive_dimensions
-            fitness_map = np.zeros((x_dim, y_dim))
+            fitness_map = np.zeros((y_dim, x_dim))
 
             for cell_index, cell in population.archive.items():
-                y, x = cell_index
+                x, y = cell_index
                 fitness = cell.evaluation_result.fitness
                 if abs(fitness) != np.inf:
-                    fitness_map[x, y] = fitness
+                    fitness_map[y, x] = fitness
 
             mask = fitness_map == 0
             if self.config.normalize_heatmaps:
