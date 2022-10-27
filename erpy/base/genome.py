@@ -140,3 +140,14 @@ class ESGenome(Genome, ABC):
 
     def cross_over(self, partner_genome: Genome, child_genome_id: int) -> ESGenome:
         raise NotImplementedError
+
+    @property
+    def specification(self) -> RobotSpecification:
+        if self._specification is None:
+            self._specification = self.config.base_specification()
+            params = self.config.extract_parameters(specification=self._specification)
+
+            for param, value in zip(params, self._parameters):
+                param.value = renormalize(value, [0, 1], [param.low, param.high])
+
+        return self._specification

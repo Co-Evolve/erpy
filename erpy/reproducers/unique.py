@@ -10,7 +10,8 @@ from erpy.base.reproducer import ReproducerConfig, Reproducer
 
 @dataclass
 class UniqueReproducerConfig(ReproducerConfig):
-    uniqueness_test: Callable[[Set, Genome], bool]
+    uniqueness_test: Callable[[Set, Genome, Population], bool]
+    max_retries: int
 
     @property
     def reproducer(self) -> Type[UniqueReproducer]:
@@ -20,13 +21,25 @@ class UniqueReproducerConfig(ReproducerConfig):
 class UniqueReproducer(Reproducer):
     def __init__(self, config: UniqueReproducerConfig) -> None:
         super().__init__(config=config)
-        self._archive = set()
+        self._archive = None
 
     @property
     def config(self) -> UniqueReproducerConfig:
         return super().config
 
+    def _initialise_from_checkpoint(self, population: Population) -> None:
+        super()._initialise_from_checkpoint(population=population)
+
+        key = "unique-reproducer-archive"
+        try:
+            self._archive = population.saving_data[key]
+        except KeyError:
+            self._archive = set()
+            population.saving_data[key] = self._archive
+
     def initialise_population(self, population: Population) -> None:
+        self._initialise_from_checkpoint(population)
+
         num_to_generate = population.population_size
 
         for i in range(num_to_generate):
@@ -35,7 +48,9 @@ class UniqueReproducer(Reproducer):
             genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
                                                                genome_id=genome_id)
 
-            while not self.config.uniqueness_test(self._archive, genome):
+            num_retries = 0
+            while not self.config.uniqueness_test(self._archive, genome,
+                                                  population) and num_retries < self.config.max_retries:
                 genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
                                                                    genome_id=genome_id)
 
@@ -52,7 +67,9 @@ class UniqueReproducer(Reproducer):
             child_id = self.next_genome_id
             child_genome = parent_genome.mutate(child_id)
 
-            while not self.config.uniqueness_test(self._archive, child_genome):
+            num_retries = 0
+            while not self.config.uniqueness_test(self._archive, child_genome,
+                                                  population) and num_retries < self.config.max_retries:
                 child_id = self.next_genome_id
                 child_genome = parent_genome.mutate(child_id)
 

@@ -32,9 +32,16 @@ class Reproducer(metaclass=abc.ABCMeta):
     def initialise_population(self, population: Population) -> None:
         raise NotImplementedError
 
-    @abc.abstractmethod
+    def _initialise_from_checkpoint(self, population: Population) -> None:
+        key = 'reproducer-genome-indexer'
+        try:
+            self._genome_indexer = population.saving_data[key]
+        except KeyError:
+            self._genome_indexer = count(0)
+            population.saving_data[key] = self._genome_indexer
+
     def reproduce(self, population: Population) -> None:
-        raise NotImplementedError
+        self._initialise_from_checkpoint(population=population)
 
     @property
     def config(self) -> ReproducerConfig:

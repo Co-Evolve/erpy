@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import Type, List
 
 import matplotlib.pyplot as plt
@@ -43,30 +44,44 @@ class MAPElitesLogger(WandBLogger):
 
         # Log archive coverage
         coverage = population.coverage
+        super()._log_value(name='archive/coverage', value=coverage, step=population.generation)
 
-        # Log a 2D heatmap
+        # Log 2D heatmaps
+        example_er = list(population.archive.values())[0].evaluation_result
+        attributes_to_log = ["fitness"]
+        try:
+            attributes_to_log += list(example_er.info["ArchiveLoggerCallback"].keys())
+        except KeyError:
+            pass
+
         if len(population.config.archive_dimensions) == 2:
             x_dim, y_dim = population.config.archive_dimensions
-            fitness_map = np.zeros((y_dim, x_dim))
+            grids = np.ones((len(attributes_to_log), y_dim, x_dim)) * np.inf
 
             for cell_index, cell in population.archive.items():
                 x, y = cell_index
-                fitness = cell.evaluation_result.fitness
-                if abs(fitness) != np.inf:
-                    fitness_map[y, x] = fitness
+                for i, attribute in enumerate(attributes_to_log):
+                    try:
+                        value = cell.evaluation_result.__getattribute__(attribute)
+                    except AttributeError:
+                        value = cell.evaluation_result.info["ArchiveLoggerCallback"][attribute]
+                    if abs(value) != np.inf:
+                        grids[i, y, x] = value
 
-            mask = fitness_map == 0
-            if self.config.normalize_heatmaps:
-                fitness_map /= np.max(fitness_map)
+            for grid, attribute in zip(grids, attributes_to_log):
+                useful = grid != np.inf
+                mask = grid == np.inf
 
-            ax = sns.heatmap(fitness_map, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
-                             yticklabels=[0] + [None] * (y_dim - 2) + [1],
-                             vmin=0,
-                             vmax=np.max(fitness_map))
-            ax.set_xlabel(self.config.archive_dimension_labels[0])
-            ax.set_ylabel(self.config.archive_dimension_labels[1])
-            ax.invert_yaxis()
+                if self.config.normalize_heatmaps and attribute == "fitness":
+                    grid[useful] /= np.max(grid[useful])
 
-            wandb.log({'archive/coverage': coverage,
-                       'archive/normalized_fitness_map': wandb.Image(ax)}, step=population.generation)
-            plt.close()
+                ax = sns.heatmap(grid, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
+                                 yticklabels=[0] + [None] * (y_dim - 2) + [1],
+                                 vmin=np.min(grid[useful]),
+                                 vmax=np.max(grid[useful]))
+                ax.set_xlabel(self.config.archive_dimension_labels[0])
+                ax.set_ylabel(self.config.archive_dimension_labels[1])
+                ax.invert_yaxis()
+
+                wandb.log({f'archive/{attribute}': wandb.Image(ax)}, step=population.generation)
+                plt.close()

@@ -45,8 +45,7 @@ class Saver(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load_checkpoint(self, checkpoint_path: str, population: Population,
-                        reproducer: Reproducer) -> None:
+    def load_checkpoint(self, checkpoint_path: str, population: Population) -> None:
         raise NotImplementedError
 
     @property

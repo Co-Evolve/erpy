@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from erpy.base.ea import EAConfig
 
 
-
 @dataclass
 class PopulationConfig:
     population_size: int
@@ -30,6 +29,7 @@ class Population(metaclass=abc.ABCMeta):
 
         self.generation = 0
         self._logging_data: Dict[str, Any] = dict()
+        self._saving_data: Dict[str, Any] = dict()
         self._genome_indexer = count(0)
         self._genomes: Dict[int, genome.Genome] = dict()
 
@@ -46,8 +46,20 @@ class Population(metaclass=abc.ABCMeta):
         return self._logging_data
 
     @property
+    def saving_data(self) -> Dict[str, Any]:
+        return self._saving_data
+
+    @saving_data.setter
+    def saving_data(self, data: Dict[str, Any]) -> None:
+        self._saving_data = data
+
+    @property
     def config(self) -> PopulationConfig:
         return self._config
+
+    @property
+    def ea_config(self) -> EAConfig:
+        return self._ea_config
 
     @property
     def population_size(self) -> int:
@@ -85,3 +97,7 @@ class Population(metaclass=abc.ABCMeta):
 
     def get_next_child_id(self) -> int:
         return next(self._genome_indexer)
+
+    @property
+    def ea_config(self):
+        return self._ea_config

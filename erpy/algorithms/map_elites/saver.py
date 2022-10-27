@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import glob
+import pickle
 from dataclasses import dataclass
-from itertools import count
 from pathlib import Path
 from typing import Type, List
 
@@ -10,7 +10,6 @@ from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
 from erpy.base.ea import EAConfig
 from erpy.base.genome import Genome
-from erpy.base.reproducer import Reproducer
 from erpy.base.saver import SaverConfig, Saver
 
 
@@ -40,18 +39,18 @@ class MAPElitesSaver(Saver):
                     cell.should_save = False
                     cell.save(cell_path)
 
+            output_path = self.output_path / "saving_data.pkl"
+            with open(output_path, "wb") as handle:
+                pickle.dump(population.saving_data, handle, pickle.HIGHEST_PROTOCOL)
+
     def load(self) -> List[Genome]:
         pass
 
-    def load_checkpoint(self, checkpoint_path: str, population: MAPElitesPopulation,
-                        reproducer: Reproducer) -> None:
-        # Todo: Remove the reproducer from this call once we have reran the experiment,
-        #   instead, save the different components during checkpoint
+    def load_checkpoint(self, checkpoint_path: str, population: MAPElitesPopulation) -> None:
         path = Path(checkpoint_path)
         assert path.exists(), f"Given checkpoint path does not exist: {checkpoint_path}"
-        cell_paths = glob.glob(str(path / 'cell*'))
+        cell_paths = glob.glob(str(path / "archive" / 'cell*'))
 
-        max_genome_id = -1
         for cell_path in cell_paths:
             cell = MAPElitesCell.load(cell_path)
             if isinstance(cell, Genome):
@@ -65,10 +64,9 @@ class MAPElitesSaver(Saver):
 
             elif isinstance(cell, MAPElitesCell):
                 population.archive[cell.descriptor] = cell
-                genome_id = cell.genome.genome_id
             else:
                 raise NotImplementedError
 
-            max_genome_id = max(max_genome_id, genome_id)
-
-        reproducer._genome_indexer = count(max_genome_id + 1)
+        saving_data_path = str(path / "saving_data.pkl")
+        with open(saving_data_path, "rb") as handle:
+            population.saving_data = pickle.load(handle)

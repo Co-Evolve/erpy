@@ -7,7 +7,7 @@ from typing import Dict, Type, List
 import numpy as np
 
 from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
-from erpy.algorithms.map_elites.types import CellIndex
+from erpy.algorithms.map_elites.types import CellIndex, PhenomeDescription
 from erpy.base.ea import EAConfig
 from erpy.base.evaluator import EvaluationResult
 from erpy.base.genome import Genome
@@ -35,12 +35,17 @@ class MAPElitesPopulation(Population):
     def config(self) -> MAPElitesPopulationConfig:
         return super().config
 
+    def get_cell_index(self, phenome_descriptor: PhenomeDescription) -> CellIndex:
+        archive_dimensions = np.asarray(self.config.archive_dimensions)
+        cell_index = tuple(np.rint(phenome_descriptor * (archive_dimensions - 1)).astype(int))
+
+        return cell_index
+
     def _add_to_archive(self, evaluation_result: EvaluationResult) -> None:
         genome = self.genomes[evaluation_result.genome_id]
-        descriptor = evaluation_result.info["phenome_descriptor"]
+        descriptor = evaluation_result.info["PhenomeDescriptorCallback"]
 
-        archive_dimensions = np.asarray(self.config.archive_dimensions)
-        cell_index = tuple(np.rint(descriptor * (archive_dimensions - 1)).astype(int))
+        cell_index = self.get_cell_index(phenome_descriptor=descriptor)
 
         if cell_index in self._archive:
             cell = self._archive[cell_index]
