@@ -76,6 +76,14 @@ class UniqueReproducer(Reproducer):
                 child_genome.genome_id = parent_id
                 child_genome = child_genome.mutate(child_id)
 
+            if num_retries == self.config.max_retries:
+                # Try generating a unique random genome if mutation fails to find one
+                num_retries = 0
+                while not self.config.uniqueness_test(self._archive, child_genome,
+                                                      population) and num_retries < self.config.max_retries:
+                    child_genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
+                                                                             genome_id=child_id)
+
             # Add the child to the population
             population.genomes[child_genome.genome_id] = child_genome
 
