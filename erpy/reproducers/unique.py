@@ -14,7 +14,6 @@ from erpy.base.reproducer import ReproducerConfig, Reproducer
 class UniqueReproducerConfig(ReproducerConfig):
     uniqueness_test: Callable[[Set, Genome, Population], bool]
     max_retries: int
-    initial_population_size: int
 
     @property
     def reproducer(self) -> Type[UniqueReproducer]:
@@ -43,7 +42,7 @@ class UniqueReproducer(Reproducer):
     def initialise_population(self, population: Population) -> None:
         self._initialise_from_checkpoint(population)
 
-        num_to_generate = self.config.initial_population_size
+        num_to_generate = population.population_size
 
         for i in tqdm(range(num_to_generate), desc="[UniqueReproducer] Initialisation"):
             # Create genome
