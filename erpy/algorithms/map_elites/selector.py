@@ -24,10 +24,10 @@ class MAPElitesSelector(Selector):
     def select(self, population: MAPElitesPopulation) -> None:
         # Randomly select genomes
         num_to_select = population.population_size - len(population.to_evaluate) - len(population.under_evaluation)
+        options = list([descriptor for descriptor, cell in population.archive.items() if
+                        cell.genome.genome_id not in population.under_evaluation])
 
-        if num_to_select > 0:
-            options = list([descriptor for descriptor, cell in population.archive.items() if
-                            cell.genome.genome_id not in population.under_evaluation])
+        if num_to_select > 0 and len(options) > 0:
             times_selected = [population.archive_times_selected[cell] for cell in options]
             times_selected = np.argsort(times_selected)
 

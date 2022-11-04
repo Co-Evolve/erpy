@@ -14,6 +14,7 @@ from erpy.base.reproducer import ReproducerConfig, Reproducer
 class UniqueReproducerConfig(ReproducerConfig):
     uniqueness_test: Callable[[Set, Genome, Population], bool]
     max_retries: int
+    initial_population_size: int
 
     @property
     def reproducer(self) -> Type[UniqueReproducer]:
@@ -42,9 +43,9 @@ class UniqueReproducer(Reproducer):
     def initialise_population(self, population: Population) -> None:
         self._initialise_from_checkpoint(population)
 
-        num_to_generate = population.population_size
+        num_to_generate = self.config.initial_population_size
 
-        for i in range(num_to_generate):
+        for i in tqdm(range(num_to_generate), desc="[UniqueReproducer] Initialisation"):
             # Create genome
             genome_id = self.next_genome_id
             genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
@@ -63,7 +64,7 @@ class UniqueReproducer(Reproducer):
             population.to_evaluate.append(genome_id)
 
     def reproduce(self, population: Population) -> None:
-        for parent_id in tqdm(population.to_reproduce, desc="[UniqueReproducer]"):
+        for parent_id in tqdm(population.to_reproduce, desc="[UniqueReproducer] reproduce"):
             parent_genome = population.genomes[parent_id]
 
             child_id = self.next_genome_id
@@ -76,19 +77,23 @@ class UniqueReproducer(Reproducer):
                 child_genome.genome_id = parent_id
                 child_genome = child_genome.mutate(child_id)
 
+                num_retries += 1
+
             if num_retries == self.config.max_retries:
-                # Try generating a unique random genome if mutation fails to find one
+                # Generate a unique random genome if mutation fails to find one
                 num_retries = 0
                 while not self.config.uniqueness_test(self._archive, child_genome,
                                                       population) and num_retries < self.config.max_retries:
                     child_genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
                                                                              genome_id=child_id)
+                    num_retries += 1
 
-            # Add the child to the population
-            population.genomes[child_genome.genome_id] = child_genome
+            if num_retries < self.config.max_retries:
+                # Add the unique child to the population
+                population.genomes[child_genome.genome_id] = child_genome
 
-            # New children should always be evaluated
-            population.to_evaluate.append(child_genome.genome_id)
+                # New children should always be evaluated
+                population.to_evaluate.append(child_genome.genome_id)
 
         population.to_reproduce.clear()
 
