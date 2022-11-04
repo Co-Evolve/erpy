@@ -70,8 +70,9 @@ class UniqueReproducer(Reproducer):
             num_retries = 0
             while not self.config.uniqueness_test(self._archive, child_genome,
                                                   population) and num_retries < self.config.max_retries:
-                child_id = self.next_genome_id
-                child_genome = parent_genome.mutate(child_id)
+                # Continue mutating the same genome until it is unique
+                child_genome.genome_id = parent_id
+                child_genome = child_genome.mutate(child_id)
 
             # Add the child to the population
             population.genomes[child_genome.genome_id] = child_genome
