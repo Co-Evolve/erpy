@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, Callable, Set
 
+from tqdm import tqdm
+
 from erpy.base.genome import Genome
 from erpy.base.population import Population
 from erpy.base.reproducer import ReproducerConfig, Reproducer
@@ -61,7 +63,7 @@ class UniqueReproducer(Reproducer):
             population.to_evaluate.append(genome_id)
 
     def reproduce(self, population: Population) -> None:
-        for parent_id in population.to_reproduce:
+        for parent_id in tqdm(population.to_reproduce, desc="[UniqueReproducer]"):
             parent_genome = population.genomes[parent_id]
 
             child_id = self.next_genome_id
