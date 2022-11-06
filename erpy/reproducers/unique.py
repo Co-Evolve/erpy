@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Type, Callable, Set
+from typing import Type, Callable, Set, Optional
 
 from tqdm import tqdm
 
@@ -14,6 +14,7 @@ from erpy.base.reproducer import ReproducerConfig, Reproducer
 class UniqueReproducerConfig(ReproducerConfig):
     uniqueness_test: Callable[[Set, Genome, Population], bool]
     max_retries: int
+    initialisation_f: Optional[Callable[[Reproducer, Population], None]] = None
 
     @property
     def reproducer(self) -> Type[UniqueReproducer]:
@@ -30,7 +31,7 @@ class UniqueReproducer(Reproducer):
         return super().config
 
     def _initialise_from_checkpoint(self, population: Population) -> None:
-        super()._initialise_from_checkpoint(population=population)
+        super().initialise_from_checkpoint(population=population)
 
         key = "unique-reproducer-archive"
         try:
@@ -40,27 +41,30 @@ class UniqueReproducer(Reproducer):
             population.saving_data[key] = self._archive
 
     def initialise_population(self, population: Population) -> None:
-        self._initialise_from_checkpoint(population)
+        self._initialise_from_checkpoint(population=population)
 
-        num_to_generate = population.population_size
+        if self.config.initialisation_f is not None:
+            self.config.initialisation_f(self, population)
+        else:
+            num_to_generate = population.population_size - len(population.to_evaluate)
 
-        for i in tqdm(range(num_to_generate), desc="[UniqueReproducer] Initialisation"):
-            # Create genome
-            genome_id = self.next_genome_id
-            genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
-                                                               genome_id=genome_id)
-
-            num_retries = 0
-            while not self.config.uniqueness_test(self._archive, genome,
-                                                  population) and num_retries < self.config.max_retries:
+            for i in tqdm(range(num_to_generate), desc="[UniqueReproducer] Initialisation"):
+                # Create genome
+                genome_id = self.next_genome_id
                 genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
                                                                    genome_id=genome_id)
 
-            # Add genome to population
-            population.genomes[genome_id] = genome
+                num_retries = 0
+                while not self.config.uniqueness_test(self._archive, genome,
+                                                      population) and num_retries < self.config.max_retries:
+                    genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
+                                                                       genome_id=genome_id)
 
-            # Initial genomes should always be evaluated
-            population.to_evaluate.append(genome_id)
+                # Add genome to population
+                population.genomes[genome_id] = genome
+
+                # Initial genomes should always be evaluated
+                population.to_evaluate.append(genome_id)
 
     def reproduce(self, population: Population) -> None:
         for parent_id in tqdm(population.to_reproduce, desc="[UniqueReproducer] reproduce"):
@@ -97,3 +101,7 @@ class UniqueReproducer(Reproducer):
         population.to_reproduce.clear()
 
         population.logging_data["UniqueReproducer/number_of_unique_genomes"] = len(self._archive)
+
+    @property
+    def archive(self) -> Set:
+        return self._archive
