@@ -7,6 +7,7 @@ from typing import Type, TYPE_CHECKING, List
 
 from erpy.algorithms.cma_es.population import CMAESPopulation
 from erpy.base.genome import ESGenome
+from erpy.base.population import Population
 from erpy.base.saver import Saver, SaverConfig
 
 if TYPE_CHECKING:
@@ -42,6 +43,9 @@ class CMAESSaver(Saver):
             elite = pickle.load(handle)
 
         return [elite]
+
+    def load_checkpoint(self, checkpoint_path: str, population: Population) -> None:
+        raise NotImplementedError
 
     @property
     def config(self) -> CMAESSaverConfig:
