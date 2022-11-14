@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional, List
 
 from erpy.base.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
@@ -127,6 +126,7 @@ class EA:
             self.config.saver_config.save_path = path
 
         genomes = self.saver.load()
+
         return self.analyze_genomes(genomes)
 
     def analyze_specifications(self, specifications: List[RobotSpecification]) -> List[EvaluationResult]:
