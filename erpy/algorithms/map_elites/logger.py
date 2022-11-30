@@ -36,15 +36,15 @@ class MAPElitesLogger(WandBLogger):
 
         # Log archive fitnesses
         fitnesses = [cell.evaluation_result.fitness for cell in population.archive.values()]
-        super()._log_values(name='archive/fitness', values=fitnesses, step=population.generation)
+        super()._log_values(name='generation/fitness', values=fitnesses, step=population.generation)
 
         # Log archive ages
         ages = [cell.genome.age for cell in population.archive.values()]
-        super()._log_values(name='archive/age', values=ages, step=population.generation)
+        super()._log_values(name='generation/age', values=ages, step=population.generation)
 
         # Log archive coverage
         coverage = population.coverage
-        super()._log_value(name='archive/coverage', value=coverage, step=population.generation)
+        super()._log_value(name='generation/archive_coverage', value=coverage, step=population.generation)
 
         # Log 2D heatmaps
         example_er = list(population.archive.values())[0].evaluation_result

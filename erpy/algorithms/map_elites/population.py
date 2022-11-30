@@ -74,8 +74,7 @@ class MAPElitesPopulation(Population):
 
     @property
     def coverage(self) -> float:
-        x_dim, y_dim = self.config.archive_dimensions
-        coverage = len(self.archive) / (x_dim * y_dim)
+        coverage = len(self.archive) / np.prod(self.config.archive_dimensions)
         return coverage
 
     @property
