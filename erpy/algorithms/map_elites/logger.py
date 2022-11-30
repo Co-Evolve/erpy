@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from operator import attrgetter
 from typing import Type, List
 
 import matplotlib.pyplot as plt
@@ -54,7 +53,7 @@ class MAPElitesLogger(WandBLogger):
         except KeyError:
             pass
 
-        if len(population.config.archive_dimensions) == 2:
+        if isinstance(population, MAPElitesPopulation) and len(population.config.archive_dimensions) == 2:
             x_dim, y_dim = population.config.archive_dimensions
             grids = np.ones((len(attributes_to_log), y_dim, x_dim)) * np.inf
 

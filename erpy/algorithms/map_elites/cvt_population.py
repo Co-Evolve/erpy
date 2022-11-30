@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Type, List
+from typing import Dict, Type
 
 import numpy as np
+from scipy.spatial import KDTree
+from sklearn.cluster import MiniBatchKMeans
 
 from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.algorithms.map_elites.types import CellIndex, PhenomeDescription
@@ -15,32 +17,47 @@ from erpy.base.population import Population, PopulationConfig
 
 
 @dataclass
-class MAPElitesPopulationConfig(PopulationConfig):
-    archive_dimensions: List[int]
+class CVTMAPElitesPopulationConfig(PopulationConfig):
+    descriptor_size: int
+    num_niches: int
     morphological_innovation_protection: bool
-    use_cvt: bool
+
+    num_init_samples: int = 1000000
 
     @property
-    def population(self) -> Type[MAPElitesPopulation]:
-        return MAPElitesPopulation
+    def population(self) -> Type[CVTMAPElitesPopulation]:
+        return CVTMAPElitesPopulation
 
 
-class MAPElitesPopulation(Population):
+class CVTMAPElitesPopulation(Population):
     def __init__(self, config: EAConfig) -> None:
-        super(MAPElitesPopulation, self).__init__(config=config)
+        super(CVTMAPElitesPopulation, self).__init__(config=config)
 
         self._archive: Dict[CellIndex, MAPElitesCell] = dict()
         self._archive_times_selected: Dict[CellIndex, int] = defaultdict(int)
+        self._kdt: KDTree = self._initialise_kdt()
 
     @property
-    def config(self) -> MAPElitesPopulationConfig:
+    def config(self) -> CVTMAPElitesPopulationConfig:
         return super().config
 
-    def get_cell_index(self, phenome_descriptor: PhenomeDescription) -> CellIndex:
-        archive_dimensions = np.asarray(self.config.archive_dimensions)
-        cell_index = tuple(np.rint(phenome_descriptor * (archive_dimensions - 1)).astype(int))
+    def _initialise_kdt(self) -> KDTree:
+        # Generate random init data
+        data = np.random.rand(self.config.num_init_samples, self.config.descriptor_size)
 
-        return cell_index
+        # Extract centroids
+        k_means = MiniBatchKMeans(n_clusters=self.config.num_niches,
+                                  random_state=self._ea_config.reproducer_config.genome_config.random_state)
+        k_means.fit(data)
+        centroids = k_means.cluster_centers_
+
+        # Create KDTree
+        return KDTree(data=centroids)
+
+    def get_cell_index(self, phenome_descriptor: PhenomeDescription) -> CellIndex:
+        # Cell index is the centroid here
+        _, index = self._kdt.query(phenome_descriptor)
+        return index
 
     def _add_to_archive(self, evaluation_result: EvaluationResult) -> None:
         genome = self.genomes[evaluation_result.genome_id]
@@ -69,13 +86,13 @@ class MAPElitesPopulation(Population):
                     self.to_evaluate.append(genome.genome_id)
         else:
             # Cell is still empty -> place the genome in it
-            self._archive[cell_index] = MAPElitesCell(descriptor=cell_index, genome=genome,
+            self._archive[cell_index] = MAPElitesCell(descriptor=descriptor, genome=genome,
                                                       evaluation_result=evaluation_result)
             self._archive[cell_index].should_save = True
 
     @property
     def coverage(self) -> float:
-        coverage = len(self.archive) / np.prod(self.config.archive_dimensions)
+        coverage = len(self.archive) / self.config.num_niches
         return coverage
 
     @property
