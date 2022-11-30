@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Union, Tuple
 
 from erpy.base.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
 from erpy.base.genome import Genome, DummyGenome
@@ -121,18 +121,21 @@ class EA:
 
         self._evaluator = None
 
-    def analyze(self, path: Optional[str] = None) -> List[EvaluationResult]:
+    def load_genomes(self, path: Optional[str] = None) -> List[Genome]:
         if path is not None:
             self.config.saver_config.save_path = path
 
-        genomes = self.saver.load()
+        return self.saver.load()
 
-        return self.analyze_genomes(genomes)
+    def analyze(self, path: Optional[str] = None) -> Tuple[List[Genome], List[EvaluationResult]]:
+        genomes = self.load_genomes(path)
 
-    def analyze_specifications(self, specifications: List[RobotSpecification]) -> List[EvaluationResult]:
+        return genomes, self.analyze_genomes(genomes)
+
+    def analyze_specifications(self, specifications: List[RobotSpecification]) -> Tuple[List[Genome], List[EvaluationResult]]:
         genomes = [DummyGenome(genome_id=i, specification=specification) for i, specification in
                    enumerate(specifications)]
-        return self.analyze_genomes(genomes=genomes)
+        return genomes, self.analyze_genomes(genomes=genomes)
 
     def analyze_genomes(self, genomes: List[Genome]) -> List[EvaluationResult]:
         # Reset population by recreating it

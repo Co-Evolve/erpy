@@ -39,6 +39,16 @@ class ESGenomeConfig(GenomeConfig):
 
         return np.array(rescaled_parameters)
 
+    def normalise_parameters(self, specification: RobotSpecification) -> np.ndarray:
+        parameters = self.extract_parameters(specification)
+
+        normalised_parameters = []
+        for parameter in parameters:
+            normalised_value = renormalize(parameter.value, [parameter.low, parameter.high], [0, 1])
+            normalised_parameters.append(normalised_value)
+
+        return np.array(normalised_parameters)
+
     @property
     def num_parameters(self) -> int:
         return len(self.extract_parameters(self.base_specification()))

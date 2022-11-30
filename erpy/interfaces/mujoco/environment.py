@@ -68,4 +68,3 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
     @property
     def camera_ids(self) -> List[int]:
         return [0]
-

@@ -117,8 +117,8 @@ class DMC2GymWrapper(core.Env):
         self.action_space.seed(seed)
         self.observation_space.seed(seed)
 
-    def step(self, action):
-        assert self.action_space.contains(action)
+    def step(self, action: np.ndarray):
+        action = action.clip(min=self.action_space.low, max=self.action_space.high)
         reward = 0
         info = {}  # {'internal_state': self._env.physics.get_state().copy()}
         time_step = self._env.step(action)

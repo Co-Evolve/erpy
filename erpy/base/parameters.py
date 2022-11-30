@@ -103,7 +103,7 @@ class DiscreteParameter(Parameter):
         return self._value
 
     @value.setter
-    def value(self, value : T) -> None:
+    def value(self, value: T) -> None:
         assert value in self.options, f"[DiscreteParameter] Given value '{value}' is not in options '{self.options}'"
         self._value = value
 
