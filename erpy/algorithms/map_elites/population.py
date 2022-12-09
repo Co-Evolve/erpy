@@ -18,7 +18,6 @@ from erpy.base.population import Population, PopulationConfig
 class MAPElitesPopulationConfig(PopulationConfig):
     archive_dimensions: List[int]
     morphological_innovation_protection: bool
-    use_cvt: bool
 
     @property
     def population(self) -> Type[MAPElitesPopulation]:
