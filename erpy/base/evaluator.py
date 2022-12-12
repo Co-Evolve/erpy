@@ -109,6 +109,9 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
         evaluation_result.info[self.name] = self.data
         return evaluation_result
 
+    def update_environment_config(self, environment_config: EnvironmentConfig) -> None:
+        pass
+
     @property
     def name(self) -> str:
         return self._name
@@ -169,3 +172,7 @@ class EvaluationCallbackHandler:
         for callback in self.callbacks:
             evaluation_result = callback.update_evaluation_result(evaluation_result)
         return evaluation_result
+
+    def update_environment_config(self, environment_config: EnvironmentConfig) -> None:
+        for callback in self.callbacks:
+            callback.update_environment_config(environment_config=environment_config)

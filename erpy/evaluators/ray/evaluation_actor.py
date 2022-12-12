@@ -35,6 +35,7 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
                         robot = self.config.robot(genome.specification)
                         self.callback_handler.from_robot(robot)
 
+                        self.callback_handler.update_environment_config(self.config.environment_config)
                         env = self.config.environment_config.environment(robot=robot)
                         self.callback_handler.from_env(env)
 
