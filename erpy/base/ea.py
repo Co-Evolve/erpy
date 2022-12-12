@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 
 from erpy.base.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
 from erpy.base.genome import Genome, DummyGenome
@@ -21,6 +21,7 @@ class EAConfig:
     logger_config: LoggerConfig
     saver_config: SaverConfig
 
+    cli_args: Optional[Dict[str, Any]] = None
     from_checkpoint: bool = False
     checkpoint_path: str = None
 
@@ -132,7 +133,8 @@ class EA:
 
         return genomes, self.analyze_genomes(genomes)
 
-    def analyze_specifications(self, specifications: List[RobotSpecification]) -> Tuple[List[Genome], List[EvaluationResult]]:
+    def analyze_specifications(self, specifications: List[RobotSpecification]) -> Tuple[
+        List[Genome], List[EvaluationResult]]:
         genomes = [DummyGenome(genome_id=i, specification=specification) for i, specification in
                    enumerate(specifications)]
         return genomes, self.analyze_genomes(genomes=genomes)
