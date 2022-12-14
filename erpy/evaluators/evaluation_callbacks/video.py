@@ -21,11 +21,7 @@ class VideoCallback(EvaluationCallback):
         self._base_path = Path(self._ea_config.saver_config.analysis_path) / "videos"
         self._base_path.mkdir(parents=True, exist_ok=True)
 
-        max_fps = 60
-        max_num_frames = self.config.environment_config.simulation_time * max_fps
-        num_frames = self.config.environment_config.num_timesteps
-        keep_ratio = max_num_frames / num_frames
-        self._keep_every_nth = math.ceil(1 / keep_ratio)
+        self._keep_every_nth = None
         self._step_index = 0
 
     def from_env(self, env: gym.Env) -> None:
@@ -35,6 +31,13 @@ class VideoCallback(EvaluationCallback):
         self._genome_id = genome.genome_id
 
     def before_step(self, observations, actions) -> None:
+        if self._keep_every_nth is None:
+            max_fps = 60
+            max_num_frames = self.config.environment_config.simulation_time * max_fps
+            num_frames = self.config.environment_config.num_timesteps
+            keep_ratio = max_num_frames / num_frames
+            self._keep_every_nth = math.ceil(1 / keep_ratio)
+
         if self._step_index % self._keep_every_nth == 0:
             self._frames.append(self._env.render())
         self._step_index += 1
