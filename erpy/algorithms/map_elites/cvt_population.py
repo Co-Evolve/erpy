@@ -118,6 +118,7 @@ class CVTMAPElitesPopulation(Population):
         return self._archive_times_selected
 
     def after_evaluation(self) -> None:
+        super().after_evaluation()
         # cleanup
         self.to_reproduce.clear()
         self.to_evaluate.clear()

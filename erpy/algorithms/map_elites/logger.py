@@ -61,6 +61,10 @@ class MAPElitesLogger(WandBLogger):
         # Log failed episodes
         super()._log_failures(population=population)
 
+        super()._log_value(name='generation/num_evaluations',
+                           value=population.num_evaluations,
+                           step=population.generation)
+
         # Log evaluation results loggings
         self._log_evaluation_result_data(population=population)
 

@@ -28,6 +28,7 @@ class Population(metaclass=abc.ABCMeta):
         self._config = config.population_config
 
         self.generation = 0
+        self.num_evaluations = 0
         self._logging_data: Dict[str, Any] = dict()
         self._saving_data: Dict[str, Any] = dict()
         self._genome_indexer = count(0)
@@ -93,7 +94,7 @@ class Population(metaclass=abc.ABCMeta):
         pass
 
     def after_evaluation(self) -> None:
-        pass
+        self.num_evaluations += len(self.evaluation_results)
 
     def get_next_child_id(self) -> int:
         return next(self._genome_indexer)
