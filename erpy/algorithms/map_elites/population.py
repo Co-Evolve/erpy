@@ -41,6 +41,12 @@ class MAPElitesPopulation(Population):
 
         return cell_index
 
+    def get_elite(self) -> MAPElitesCell:
+        cells = list(self.archive.values())
+        fitnesses = [cell.evaluation_result.fitness for cell in cells]
+        index = np.argmax(fitnesses)
+        return cells[index]
+
     def _add_to_archive(self, evaluation_result: EvaluationResult) -> None:
         genome = self.genomes[evaluation_result.genome_id]
         descriptor = evaluation_result.info["PhenomeDescriptorCallback"]

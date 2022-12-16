@@ -8,6 +8,7 @@ import wandb
 
 from erpy.algorithms.map_elites.population import MAPElitesPopulation
 from erpy.base.ea import EAConfig
+from erpy.base.genome import ESGenome
 from erpy.loggers.wandb_logger import WandBLoggerConfig, WandBLogger
 
 
@@ -29,9 +30,41 @@ class MAPElitesLogger(WandBLogger):
     def config(self) -> MAPElitesLoggerConfig:
         return super().config
 
+    def _log_evaluation_result_data(self, population: MAPElitesPopulation) -> None:
+        # log info from evaluation result's info
+        try:
+            evaluation_results = [cell.evaluation_result for cell in population.archive.values()]
+            er_log_keys = [key for key in evaluation_results[0].info.keys() if key.startswith('logging_')]
+            for key in er_log_keys:
+                name = "evaluation_results/" + key.replace("logging_", "")
+                values = [er.info[key] for er in evaluation_results]
+                self._log_unknown(name=name, data=values, step=population.generation)
+        except IndexError:
+            pass
+
+    def _log_elite_params(self, population: MAPElitesPopulation) -> None:
+        cell = population.get_elite()
+
+        genome = cell.genome
+        if isinstance(genome, ESGenome):
+            parameters = genome.config.rescale_parameters(genome.parameters)
+
+            for name, value in zip(genome.config.parameter_labels, parameters):
+                self._log_value(name=f'Elite/{name}', value=value, step=population.generation)
+
+        er = cell.evaluation_result
+        for key in er.info.keys():
+            if key.startswith('logging_'):
+                self._log_unknown(name=f'Elite/{key}', data=er.info[key], step=population.generation)
+
     def log(self, population: MAPElitesPopulation) -> None:
         # Log failed episodes
         super()._log_failures(population=population)
+
+        # Log evaluation results loggings
+        self._log_evaluation_result_data(population=population)
+
+        self._log_elite_params(population=population)
 
         # Log archive fitnesses
         fitnesses = [cell.evaluation_result.fitness for cell in population.archive.values()]

@@ -50,6 +50,7 @@ class WandBLogger(Logger):
 
     def _log_values(self, name: str, values: List[float], step: int) -> None:
         self.wandb.log({f'{name}_max': np.max(values),
+                        f'{name}_min': np.min(values),
                         f'{name}_mean': np.mean(values),
                         f'{name}_std': np.std(values)}, step=step)
 
@@ -73,11 +74,14 @@ class WandBLogger(Logger):
 
     def _log_evaluation_result_data(self, population: Population) -> None:
         # log info from evaluation result's info
-        er_log_keys = [key for key in population.evaluation_results[0].info.keys() if key.startswith('logging_')]
-        for key in er_log_keys:
-            name = "evaluation_results/" + key.replace("logging_", "")
-            values = [er.info[key] for er in population.evaluation_results]
-            self._log_unknown(name=name, data=values, step=population.generation)
+        try:
+            er_log_keys = [key for key in population.evaluation_results[0].info.keys() if key.startswith('logging_')]
+            for key in er_log_keys:
+                name = "evaluation_results/" + key.replace("logging_", "")
+                values = [er.info[key] for er in population.evaluation_results]
+                self._log_unknown(name=name, data=values, step=population.generation)
+        except IndexError:
+            pass
 
     def _log_failures(self, population: Population) -> None:
         failures = [er.info["episode_failures"] for er in population.evaluation_results]

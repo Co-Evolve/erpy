@@ -41,6 +41,12 @@ class CVTMAPElitesPopulation(Population):
     def config(self) -> CVTMAPElitesPopulationConfig:
         return super().config
 
+    def get_elite(self) -> MAPElitesCell:
+        cells = list(self.archive.values())
+        fitnesses = [cell.evaluation_result.fitness for cell in cells]
+        index = np.argmax(fitnesses)
+        return cells[index]
+
     def _initialise_kdt(self) -> KDTree:
         # Generate random init data
         data = np.random.rand(self.config.num_init_samples, self.config.descriptor_size)
