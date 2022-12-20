@@ -162,6 +162,8 @@ class ESGenome(Genome, ABC):
             params = self.config.extract_parameters(specification=self._specification)
 
             for param, value in zip(params, self._parameters):
-                param.value = renormalize(value, [0, 1], [param.low, param.high])
+                if isinstance(param, ContinuousParameter):
+                    value = renormalize(value, [0, 1], [param.low, param.high])
+                param.value = value
 
         return self._specification
