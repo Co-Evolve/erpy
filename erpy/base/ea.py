@@ -13,7 +13,6 @@ from erpy.base.specification import RobotSpecification
 
 @dataclass
 class EAConfig:
-    num_generations: int
     population_config: PopulationConfig
     evaluator_config: EvaluatorConfig
     selector_config: SelectorConfig
@@ -24,6 +23,8 @@ class EAConfig:
     cli_args: Optional[Dict[str, Any]] = None
     from_checkpoint: bool = False
     checkpoint_path: str = None
+    num_generations: Optional[int] = None
+    num_evaluations: Optional[int] = None
 
     @property
     def population(self) -> Population:
@@ -101,6 +102,14 @@ class EA:
             self._saver = self.config.saver
         return self._saver
 
+    def is_done(self) -> bool:
+        is_done = False
+        if self.config.num_generations is not None and self.population.generation >= self.config.num_generations:
+            is_done = True
+        if self.config.num_evaluations is not None and self.population.num_evaluations >= self.config.num_evaluations:
+            is_done = True
+        return is_done
+
     def run(self) -> None:
         if self.config.from_checkpoint:
             self.saver.load_checkpoint(checkpoint_path=self.config.checkpoint_path,
@@ -110,8 +119,7 @@ class EA:
         else:
             self.reproducer.initialise_population(self.population)
 
-        for generation in range(self._config.num_generations):
-            self.population.generation = generation
+        while not self.is_done():
             self.reproducer.reproduce(population=self.population)
             self.population.before_evaluation()
             self.evaluator.evaluate(population=self.population)
@@ -119,6 +127,7 @@ class EA:
             self.logger.log(population=self.population)
             self.saver.save(population=self.population)
             self.selector.select(population=self.population)
+            self.population.generation += 1
 
         self._evaluator = None
 
