@@ -40,12 +40,20 @@ class RobotSpecification(Specification, metaclass=abc.ABCMeta):
     morphology_specification: MorphologySpecification
     controller_specification: ControllerSpecification
 
+    @property
+    def is_valid(self) -> bool:
+        return self.morphology_specification.is_valid and self.controller_specification.is_valid
+
 
 @dataclass
 class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
-    pass
+    @property
+    def is_valid(self) -> bool:
+        return True
 
 
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
-    pass
+    @property
+    def is_valid(self) -> bool:
+        return True
