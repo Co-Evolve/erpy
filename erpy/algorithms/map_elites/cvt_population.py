@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Type
+from typing import Dict, Type, List, Tuple, Callable
 
 import numpy as np
 from scipy.spatial import KDTree
 from sklearn.cluster import MiniBatchKMeans
+from tqdm import tqdm
 
 from erpy.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.algorithms.map_elites.types import CellIndex, PhenomeDescription
@@ -18,7 +19,7 @@ from erpy.base.population import Population, PopulationConfig
 
 @dataclass
 class CVTMAPElitesPopulationConfig(PopulationConfig):
-    descriptor_size: int
+    descriptor_generator: Callable[[], PhenomeDescription]
     num_niches: int
     morphological_innovation_protection: bool
 
@@ -48,8 +49,9 @@ class CVTMAPElitesPopulation(Population):
         return cells[index]
 
     def _initialise_kdt(self) -> KDTree:
-        # Generate random init data
-        data = np.random.rand(self.config.num_init_samples, self.config.descriptor_size)
+        # Generate random init data by generating random genomes
+        data = np.array([self.config.descriptor_generator() for _ in tqdm(range(self.config.num_init_samples),
+                                                                          desc="Initialising kd-tree")])
 
         # Extract centroids
         k_means = MiniBatchKMeans(n_clusters=self.config.num_niches,
