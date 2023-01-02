@@ -14,7 +14,7 @@ from erpy.base.reproducer import ReproducerConfig, Reproducer
 
 @dataclass
 class CMAESReproducerConfig(ReproducerConfig):
-    genome_config: ESGenomeConfig
+    genome_config: Type[ESGenomeConfig]
     x0: np.ndarray
     sigma0: float
 
@@ -47,7 +47,7 @@ class CMAESReproducer(Reproducer):
         for solution in new_solutions:
             genome_id = self.next_genome_id
 
-            genome = self.config.genome_config.genome()(parameters=solution, config=self.config.genome_config,
+            genome = self.config.genome_config.genome(parameters=solution, config=self.config.genome_config,
                                                         genome_id=genome_id)
 
             population.genomes[genome_id] = genome
