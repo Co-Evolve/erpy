@@ -17,6 +17,7 @@ def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym
     env = composer.Environment(task=task,
                                random_state=config.random_state,
                                time_limit=config.simulation_time)
+    print(f"SIM TIME: {config.simulation_time}")
 
     if wrap2gym:
         env = DMC2GymWrapper(env=env,

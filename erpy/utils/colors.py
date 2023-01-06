@@ -14,3 +14,7 @@ rgba_red = np.array(ImageColor.getcolor(hex_red, "RGBA")) / 255
 rgba_orange = np.array(ImageColor.getcolor(hex_orange, "RGBA")) / 255
 rgba_gray = np.array(ImageColor.getcolor(hex_gray, "RGBA")) / 255
 rgba_blue = np.array(ImageColor.getcolor(hex_blue, "RGBA")) / 255
+
+print(f"Green:  {rgba_green * 255}")
+print(f"Orange: {rgba_orange * 255}")
+print(f"Red:    {rgba_red * 255}")

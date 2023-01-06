@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import abc
 from abc import ABC
 from dataclasses import dataclass
-from typing import Callable, Type, cast, Optional
+from typing import Callable, Type, Optional
 
 from ray.util import ActorPool
 from tqdm import tqdm
@@ -33,15 +32,19 @@ class RayDistributedEvaluator(Evaluator):
     def __init__(self, config: EAConfig) -> None:
         super(RayDistributedEvaluator, self).__init__(config=config)
 
-        self.pool: ActorPool = self._build_pool()
+        self.pool: ActorPool = None
+        self._build_pool()
 
     @property
     def config(self) -> RayDistributedEvaluatorConfig:
         return super().config
 
-    def _build_pool(self) -> ActorPool:
-        workers = [self.config.actor_generator(self._ea_config).remote(self._ea_config) for _ in range(self.config.num_workers)]
-        return ActorPool(workers)
+    def _build_pool(self) -> None:
+        if self.pool is not None:
+            del self.pool
+        workers = [self.config.actor_generator(self._ea_config).remote(self._ea_config) for _ in
+                   range(self.config.num_workers)]
+        self.pool = ActorPool(workers)
 
     def evaluate(self, population: Population, analyze: bool = False) -> None:
         all_genomes = population.genomes
