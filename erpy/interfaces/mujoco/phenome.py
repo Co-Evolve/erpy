@@ -6,6 +6,7 @@ from typing import Tuple, Union
 
 import numpy as np
 from dm_control import composer, mjcf
+from scipy.spatial.transform import Rotation
 
 from erpy.base.phenome import Morphology, Robot
 from erpy.base.specification import MorphologySpecification, RobotSpecification
@@ -46,6 +47,17 @@ class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
     def after_attachment(self) -> None:
         raise NotImplementedError
 
+    @property
+    def world_coordinates(self) -> np.ndarray:
+        return np.zeros(3)
+
+    @property
+    def coordinate_frame_in_world(self):
+        return np.zeros(3), Rotation.from_euler('xyz', [0, 0, 0]).as_matrix()
+
+    def world_coordinates_of_point(self, point: np.ndarray) -> np.ndarray:
+        return point
+
 
 class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
     def __init__(self, parent: Union[MJCMorphology, MJCMorphologyPart],
@@ -59,6 +71,7 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
                                                pos=pos,
                                                euler=euler)
         super().__init__(self.specification)
+        self._coordinate_frame_in_world = None
         self._build(*args, **kwargs)
 
     @property
@@ -76,3 +89,30 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _build(self, *args, **kwargs) -> None:
         raise NotImplementedError
+
+    @property
+    def coordinate_frame_in_world(self):
+        """
+        Returns the object's coordinate frame with respect to the morphology's world frame:
+            0 -> the object's coordinates in world frame
+            1 -> a rotation matrix that represents the transformation from the object's local frame to the world frame
+        :return:
+        """
+        if self._coordinate_frame_in_world is None:
+            parent_origin, parent_rot = self._parent.coordinate_frame_in_world
+
+            pos = self.mjcf_body.pos
+            euler = self.mjcf_body.euler
+            my_rot = Rotation.from_euler('xyz', euler).as_matrix()
+
+            self._coordinate_frame_in_world = parent_origin + parent_rot.dot(pos), parent_rot.dot(my_rot)
+        return self._coordinate_frame_in_world
+
+    def world_coordinates_of_point(self, point: np.ndarray) -> np.ndarray:
+        """ Returns the world coordinates of the given point in local coordinates"""
+        origin, rot = self.coordinate_frame_in_world
+        return origin + rot.dot(point)
+
+    @property
+    def world_coordinates(self):
+        return self.coordinate_frame_in_world[0]
