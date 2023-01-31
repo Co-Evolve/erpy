@@ -9,8 +9,8 @@ from dm_control import composer, mjcf
 from dm_control.mjcf import export_with_assets
 from scipy.spatial.transform import Rotation
 
-from erpy.base.phenome import Morphology, Robot
-from erpy.base.specification import MorphologySpecification, RobotSpecification
+from erpy.framework.phenome import Morphology, Robot
+from erpy.framework.specification import MorphologySpecification, RobotSpecification
 
 
 class MJCRobot(Robot, ABC):

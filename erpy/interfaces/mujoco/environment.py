@@ -7,7 +7,7 @@ from typing import Callable, List
 from dm_control import composer
 from stable_baselines3.common.monitor import Monitor
 
-from erpy.base.environment import EnvironmentConfig, Environment
+from erpy.framework.environment import EnvironmentConfig, Environment
 from erpy.interfaces.mujoco.gym_wrapper import DMC2GymWrapper
 from erpy.interfaces.mujoco.phenome import MJCRobot, MJCMorphology
 
