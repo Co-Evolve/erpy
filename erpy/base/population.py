@@ -98,7 +98,3 @@ class Population(metaclass=abc.ABCMeta):
 
     def get_next_child_id(self) -> int:
         return next(self._genome_indexer)
-
-    @property
-    def ea_config(self):
-        return self._ea_config

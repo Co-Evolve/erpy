@@ -6,6 +6,7 @@ from typing import Tuple, Union
 
 import numpy as np
 from dm_control import composer, mjcf
+from dm_control.mjcf import export_with_assets
 from scipy.spatial.transform import Rotation
 
 from erpy.base.phenome import Morphology, Robot
@@ -13,7 +14,7 @@ from erpy.base.specification import MorphologySpecification, RobotSpecification
 
 
 class MJCRobot(Robot, ABC):
-    def __init__(self, specification: RobotSpecification):
+    def __init__(self, specification: RobotSpecification) -> None:
         super().__init__(specification)
 
     @property
@@ -24,6 +25,7 @@ class MJCRobot(Robot, ABC):
 class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
     def __init__(self, specification: MorphologySpecification, model_name: str = 'robot') -> None:
         self._mjcf_model = mjcf.RootElement(model=model_name)
+        self._mjcf_body = self._mjcf_model.worldbody.add('body')
         Morphology.__init__(self, specification)
         composer.Entity.__init__(self)
 
@@ -36,16 +38,20 @@ class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
         return tuple(self.mjcf_model.find_all('actuator'))
 
     @property
+    def sensors(self) -> Tuple[mjcf.Element]:
+        return tuple(self.mjcf_model.find_all('sensor'))
+
+    @property
     def mjcf_body(self) -> mjcf.Element:
-        return self.mjcf_model.worldbody
+        return self._mjcf_body
 
     @property
     def mjcf_model(self) -> mjcf.RootElement:
         return self._mjcf_model
 
-    @abc.abstractmethod
     def after_attachment(self) -> None:
-        raise NotImplementedError
+        # Called when the morphology is added to the environment
+        pass
 
     @property
     def world_coordinates(self) -> np.ndarray:
@@ -57,6 +63,10 @@ class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
 
     def world_coordinates_of_point(self, point: np.ndarray) -> np.ndarray:
         return point
+
+    def export_to_xml_with_assets(self, output_directory: str = "./mjcf") -> None:
+        export_with_assets(mjcf_model=self.mjcf_model,
+                           out_dir=output_directory)
 
 
 class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):

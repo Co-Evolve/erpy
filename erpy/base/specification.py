@@ -47,6 +47,8 @@ class RobotSpecification(Specification, metaclass=abc.ABCMeta):
 
 @dataclass
 class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
+    name: str = "morphology"
+
     @property
     def is_valid(self) -> bool:
         return True

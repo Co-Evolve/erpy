@@ -9,7 +9,7 @@ from stable_baselines3.common.monitor import Monitor
 
 from erpy.base.environment import EnvironmentConfig, Environment
 from erpy.interfaces.mujoco.gym_wrapper import DMC2GymWrapper
-from erpy.interfaces.mujoco.phenome import MJCRobot
+from erpy.interfaces.mujoco.phenome import MJCRobot, MJCMorphology
 
 
 def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym: bool = True) -> Environment:
@@ -17,7 +17,6 @@ def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym
     env = composer.Environment(task=task,
                                random_state=config.random_state,
                                time_limit=config.simulation_time)
-    print(f"SIM TIME: {config.simulation_time}")
 
     if wrap2gym:
         env = DMC2GymWrapper(env=env,
@@ -33,7 +32,7 @@ def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym
 class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
     @property
     @abc.abstractmethod
-    def task(self) -> Callable[[MJCEnvironmentConfig, MJCRobot], composer.Task]:
+    def task(self) -> Callable[[MJCEnvironmentConfig, MJCMorphology], composer.Task]:
         raise NotImplementedError
 
     def environment(self, robot: MJCRobot, wrap2gym: bool = True) -> Environment:

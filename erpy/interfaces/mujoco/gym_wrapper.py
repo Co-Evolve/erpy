@@ -25,8 +25,13 @@ def _spec_to_box(spec, dtype):
         mn, mx = extract_min_max(s)
         mins.append(mn)
         maxs.append(mx)
-    low = np.concatenate(mins, axis=0).astype(dtype)
-    high = np.concatenate(maxs, axis=0).astype(dtype)
+
+    try:
+        low = np.concatenate(mins, axis=0).astype(dtype)
+        high = np.concatenate(maxs, axis=0).astype(dtype)
+    except ValueError:
+        low = np.array([])
+        high = np.array([])
     assert low.shape == high.shape
     return spaces.Box(low, high, dtype=dtype)
 
@@ -36,7 +41,10 @@ def _flatten_obs(obs):
     for v in obs.values():
         flat = np.array([v]) if np.isscalar(v) else v.ravel()
         obs_pieces.append(flat)
-    return np.concatenate(obs_pieces, axis=0)
+    try:
+        return np.concatenate(obs_pieces, axis=0)
+    except ValueError:
+        return np.array([])
 
 
 class DMC2GymWrapper(core.Env):
