@@ -39,29 +39,6 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
         return default_make_mjc_env(config=self, robot=robot, wrap2gym=wrap2gym)
 
     @property
-    @abc.abstractmethod
-    def simulation_time(self) -> float:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def num_substeps(self) -> int:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def time_scale(self) -> float:
-        raise NotImplementedError
-
-    @property
-    def control_timestep(self) -> float:
-        return self.num_substeps * self.physics_timestep
-
-    @property
-    def physics_timestep(self) -> float:
-        return self.original_physics_timestep * self.time_scale
-
-    @property
     def original_physics_timestep(self) -> float:
         return 0.002
 
