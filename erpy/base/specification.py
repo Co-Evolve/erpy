@@ -39,6 +39,7 @@ class Specification(metaclass=abc.ABCMeta):
 class RobotSpecification(Specification, metaclass=abc.ABCMeta):
     morphology_specification: MorphologySpecification
     controller_specification: ControllerSpecification
+    name: str = "robot"
 
     @property
     def is_valid(self) -> bool:
@@ -56,6 +57,8 @@ class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
 
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
+    name: str = "controller"
+
     @property
     def is_valid(self) -> bool:
         return True
