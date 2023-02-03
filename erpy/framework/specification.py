@@ -8,7 +8,7 @@ from typing import List, Iterable, TYPE_CHECKING
 from erpy.framework.parameters import Parameter
 
 if TYPE_CHECKING:
-    from erpy.framework.phenome import Morphology, Controller
+    pass
 
 
 @dataclass
@@ -57,10 +57,6 @@ class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
     def is_valid(self) -> bool:
         return True
 
-    @abc.abstractmethod
-    def build(self) -> Morphology:
-        raise NotImplementedError
-
 
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
@@ -69,7 +65,3 @@ class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
     @property
     def is_valid(self) -> bool:
         return True
-
-    @abc.abstractmethod
-    def build(self) -> Controller:
-        raise NotImplementedError
