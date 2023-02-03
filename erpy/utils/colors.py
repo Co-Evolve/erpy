@@ -15,5 +15,5 @@ rgba_orange = np.array(ImageColor.getcolor(hex_orange, "RGBA")) / 255
 rgba_gray = np.array(ImageColor.getcolor(hex_gray, "RGBA")) / 255
 rgba_blue = np.array(ImageColor.getcolor(hex_blue, "RGBA")) / 255
 
-rgba_muscle_relaxed = np.array([214, 174, 114, 190]) / 255.
-rgba_muscle_contracted = np.array([183, 86, 89, 210]) / 255.
+rgba_tendon_relaxed = np.array([214, 174, 114, 190]) / 255.
+rgba_tendon_contracted = np.array([183, 86, 89, 210]) / 255.

@@ -14,6 +14,8 @@ from erpy.interfaces.mujoco.phenome import MJCRobot, MJCMorphology
 
 def default_make_mjc_env(config: MJCEnvironmentConfig, robot: MJCRobot, wrap2gym: bool = True) -> Environment:
     task = config.task(config, robot.morphology)
+    task.set_timesteps(control_timestep=config.control_timestep,
+                       physics_timestep=config.physics_timestep)
     env = composer.Environment(task=task,
                                random_state=config.random_state,
                                time_limit=config.simulation_time)
@@ -45,3 +47,7 @@ class MJCEnvironmentConfig(EnvironmentConfig, abc.ABC):
     @property
     def camera_ids(self) -> List[int]:
         return [0]
+
+    @property
+    def time_scale(self) -> float:
+        return 1.0

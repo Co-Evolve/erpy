@@ -37,27 +37,25 @@ class Specification(metaclass=abc.ABCMeta):
 
 @dataclass
 class RobotSpecification(Specification, metaclass=abc.ABCMeta):
+    name: str
     morphology_specification: MorphologySpecification
     controller_specification: ControllerSpecification
-    name: str = "robot"
 
     @property
     def is_valid(self) -> bool:
         return self.morphology_specification.is_valid and self.controller_specification.is_valid
 
-
 @dataclass
 class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
-    name: str = "morphology"
+    name: str
 
     @property
     def is_valid(self) -> bool:
         return True
 
-
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
-    name: str = "controller"
+    name: str
 
     @property
     def is_valid(self) -> bool:

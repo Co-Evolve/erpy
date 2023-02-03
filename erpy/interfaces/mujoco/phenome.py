@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from abc import ABC
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import numpy as np
 from dm_control import composer, mjcf
@@ -23,8 +23,8 @@ class MJCRobot(Robot, ABC):
 
 
 class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
-    def __init__(self, specification: MorphologySpecification, model_name: str = 'robot') -> None:
-        self._mjcf_model = mjcf.RootElement(model=model_name)
+    def __init__(self, specification: MorphologySpecification) -> None:
+        self._mjcf_model = mjcf.RootElement(model=specification.name)
         self._mjcf_body = self._mjcf_model.worldbody.add('body')
         Morphology.__init__(self, specification)
         composer.Entity.__init__(self)
@@ -34,12 +34,12 @@ class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
         return self._specification
 
     @property
-    def actuators(self) -> Tuple[mjcf.Element]:
-        return tuple(self.mjcf_model.find_all('actuator'))
+    def actuators(self) -> List[mjcf.Element]:
+        return self.mjcf_model.find_all('actuator')
 
     @property
-    def sensors(self) -> Tuple[mjcf.Element]:
-        return tuple(self.mjcf_model.find_all('sensor'))
+    def sensors(self) -> List[mjcf.Element]:
+        return self.mjcf_model.find_all('sensor')
 
     @property
     def mjcf_body(self) -> mjcf.Element:
@@ -76,8 +76,9 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
                  euler: np.array,
                  *args, **kwargs) -> None:
         self._parent = parent
+        self._name = name
         self._mjcf_body = parent.mjcf_body.add('body',
-                                               name=name,
+                                               name=self._name,
                                                pos=pos,
                                                euler=euler)
         super().__init__(self.specification)
@@ -95,6 +96,10 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
     @property
     def mjcf_body(self) -> mjcf.Element:
         return self._mjcf_body
+
+    @property
+    def base_name(self) -> str:
+        return self._name
 
     @abc.abstractmethod
     def _build(self, *args, **kwargs) -> None:

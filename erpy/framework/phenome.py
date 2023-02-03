@@ -4,7 +4,7 @@ import abc
 
 import numpy as np
 
-import erpy.base.specification as spec
+import erpy.framework.specification as spec
 
 
 class Phenome(metaclass=abc.ABCMeta):
