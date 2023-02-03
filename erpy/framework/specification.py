@@ -3,9 +3,12 @@ from __future__ import annotations
 import abc
 import pickle
 from dataclasses import dataclass
-from typing import List, Iterable
+from typing import List, Iterable, TYPE_CHECKING
 
 from erpy.framework.parameters import Parameter
+
+if TYPE_CHECKING:
+    from erpy.framework.phenome import Morphology, Controller
 
 
 @dataclass
@@ -45,6 +48,7 @@ class RobotSpecification(Specification, metaclass=abc.ABCMeta):
     def is_valid(self) -> bool:
         return self.morphology_specification.is_valid and self.controller_specification.is_valid
 
+
 @dataclass
 class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
     name: str
@@ -53,6 +57,11 @@ class MorphologySpecification(Specification, metaclass=abc.ABCMeta):
     def is_valid(self) -> bool:
         return True
 
+    @abc.abstractmethod
+    def build(self) -> Morphology:
+        raise NotImplementedError
+
+
 @dataclass
 class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
     name: str
@@ -60,3 +69,7 @@ class ControllerSpecification(Specification, metaclass=abc.ABCMeta):
     @property
     def is_valid(self) -> bool:
         return True
+
+    @abc.abstractmethod
+    def build(self) -> Controller:
+        raise NotImplementedError
