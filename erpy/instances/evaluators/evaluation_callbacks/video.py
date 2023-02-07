@@ -1,3 +1,4 @@
+import logging
 import math
 from pathlib import Path
 
@@ -47,7 +48,7 @@ class VideoCallback(EvaluationCallback):
     def after_episode(self) -> None:
         fps = len(self._frames) / self.config.environment_config.simulation_time
         path = self._base_path / f'genome_{self._genome_id}_episode_{self._episode_index}.mp4'
-        print(f'Creating video of {len(self._frames)} frames (fps: {fps}) and saving to {str(path)}')
+        logging.info(f'Creating video of {len(self._frames)} frames (fps: {fps}) and saving to {str(path)}')
 
         create_video(frames=self._frames, framerate=fps,
                      out_path=str(path))

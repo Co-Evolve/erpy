@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
@@ -8,8 +9,9 @@ from erpy.framework.population import Population
 if TYPE_CHECKING:
     from erpy.framework.ea import EAConfig
 
+
 @dataclass
-class LoggerConfig:
+class LoggerConfig(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def logger(self) -> Type[Logger]:

@@ -64,27 +64,27 @@ class WandBLogger(Logger):
             self._log_value(name=name, value=data, step=step)
 
     def _log_fitness(self, population: Population) -> None:
-        fitnesses = [er.fitness for er in population.evaluation_results]
+        fitnesses = [er.fitness for er in population.evaluation_results.values()]
         self._log_values(name='generation/fitness', values=fitnesses, step=population.generation)
 
     def _log_population_data(self, population: Population) -> None:
         for name, data in population.logging_data:
             self._log_unknown(name=name, data=data, step=population.generation)
-        population.logging_data.clear()
 
     def _log_evaluation_result_data(self, population: Population) -> None:
         # log info from evaluation result's info
         try:
-            er_log_keys = [key for key in population.evaluation_results[0].info.keys() if key.startswith('logging_')]
+            er_log_keys = [key for key in list(population.evaluation_results.values())[0].info.keys() if
+                           key.startswith('logging_')]
             for key in er_log_keys:
                 name = "evaluation_results/" + key.replace("logging_", "")
-                values = [er.info[key] for er in population.evaluation_results]
+                values = [er.info[key] for er in population.evaluation_results.values()]
                 self._log_unknown(name=name, data=values, step=population.generation)
         except IndexError:
             pass
 
     def _log_failures(self, population: Population) -> None:
-        failures = [er.info["episode_failures"] for er in population.evaluation_results]
+        failures = [er.info["episode_failures"] for er in population.evaluation_results.values()]
         physics_failures = sum([er_failure["physics"] for er_failure in failures])
         self._log_value(name="episode_failures", value=physics_failures, step=population.generation)
 

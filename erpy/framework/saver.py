@@ -3,11 +3,9 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Type, TYPE_CHECKING, List
+from typing import Type, TYPE_CHECKING
 
-from erpy.framework.genome import Genome
 from erpy.framework.population import Population
-from erpy.framework.reproducer import Reproducer
 
 if TYPE_CHECKING:
     from erpy.framework.ea import EAConfig
@@ -33,6 +31,8 @@ class Saver(metaclass=abc.ABCMeta):
         self._ea_config = config
         self._config = config.saver_config
 
+        Path(self.config.save_path).mkdir(parents=True, exist_ok=True)
+
     def should_save(self, generation: int) -> bool:
         return generation % self.config.save_freq == 0
 
@@ -41,11 +41,7 @@ class Saver(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load(self) -> List[Genome]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def load_checkpoint(self, checkpoint_path: str, population: Population) -> None:
+    def load(self) -> Population:
         raise NotImplementedError
 
     @property

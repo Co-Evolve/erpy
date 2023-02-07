@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SelectorConfig:
+class SelectorConfig(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def selector(self) -> Type[Selector]:

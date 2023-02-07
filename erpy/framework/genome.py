@@ -87,9 +87,8 @@ class Genome(abc.ABC):
         return self._config
 
     @property
-    @abc.abstractmethod
     def specification(self) -> RobotSpecification:
-        raise NotImplementedError
+        return self._specification
 
     @staticmethod
     def generate(config: GenomeConfig, genome_id: int, *args, **kwargs) -> Genome:

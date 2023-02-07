@@ -112,6 +112,7 @@ class EA:
 
     def run(self) -> None:
         if self.config.from_checkpoint:
+            # todo: fix checkpointing
             self.saver.load_checkpoint(checkpoint_path=self.config.checkpoint_path,
                                        population=self.population)
             self.reproducer.initialise_from_checkpoint(population=self.population)
@@ -120,13 +121,21 @@ class EA:
             self.reproducer.initialise_population(self.population)
 
         while not self.is_done():
+            self.population.before_reproduction()
             self.reproducer.reproduce(population=self.population)
+            self.population.after_reproduction()
             self.population.before_evaluation()
             self.evaluator.evaluate(population=self.population)
             self.population.after_evaluation()
+            self.population.before_logging()
             self.logger.log(population=self.population)
+            self.population.after_logging()
+            self.population.before_saving()
             self.saver.save(population=self.population)
+            self.population.after_saving()
+            self.population.before_selection()
             self.selector.select(population=self.population)
+            self.population.after_selection()
             self.population.generation += 1
 
         self._evaluator = None
@@ -137,29 +146,25 @@ class EA:
 
         return self.saver.load()
 
-    def analyze(self, path: Optional[str] = None) -> Tuple[List[Genome], List[EvaluationResult]]:
+    def analyze(self, path: Optional[str] = None) -> Tuple[List[Genome], Dict[int, EvaluationResult]]:
         genomes = self.load_genomes(path)
 
         return genomes, self.analyze_genomes(genomes)
 
     def analyze_specifications(self, specifications: List[RobotSpecification]) -> Tuple[
-        List[Genome], List[EvaluationResult]]:
+        List[Genome], Dict[int, EvaluationResult]]:
         genomes = [DummyGenome(genome_id=i, specification=specification) for i, specification in
                    enumerate(specifications)]
         return genomes, self.analyze_genomes(genomes=genomes)
 
-    def analyze_genomes(self, genomes: List[Genome]) -> List[EvaluationResult]:
+    def analyze_genomes(self, genomes: List[Genome]) -> Dict[int, EvaluationResult]:
         # Reset population by recreating it
         self._population = None
 
         for genome in genomes:
             self.population.genomes[genome.genome_id] = genome
-            self.population.to_evaluate.append(genome.genome_id)
+            self.population.to_evaluate.add(genome.genome_id)
 
         self.evaluator.evaluate(self.population, analyze=True)
 
-        # Sort evaluation results according to genome order
-        er_genome_ids = [er.genome_id for er in self.population.evaluation_results]
-        er_indices = [er_genome_ids.index(genome.genome_id) for genome in genomes]
-
-        return [self.population.evaluation_results[i] for i in er_indices]
+        return self.population.evaluation_results

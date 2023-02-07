@@ -74,9 +74,12 @@ class EvaluationActor(metaclass=abc.ABCMeta):
 
 
 class EvaluationCallback(metaclass=abc.ABCMeta):
-    def __init__(self, config: EAConfig, name: str = 'unnamed') -> None:
+    def __init__(self, config: EAConfig, name: Optional[str] = None) -> None:
         self._ea_config = config
         self._config = config.evaluator_config
+
+        if name is None:
+            name = self.__class__.__name__
         self._name = name
         self._data = None
 
@@ -87,22 +90,23 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
     def from_env(self, env: gym.Env) -> None:
         pass
 
-    def before_episode(self):
+    def before_episode(self) -> None:
         pass
 
-    def after_episode(self):
+    def after_episode(self) -> None:
         pass
 
-    def from_robot(self, robot: Robot):
+    def from_robot(self, robot: Robot) -> None:
         pass
 
-    def from_genome(self, genome: Genome):
+    def from_genome(self, genome: Genome) -> None:
         pass
 
-    def before_step(self, observations, actions):
+    def before_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray) -> None:
         pass
 
-    def after_step(self, observations, actions, info=None):
+    def after_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray,
+                   info: Optional[Dict[str, Any]] = None) -> None:
         pass
 
     def update_evaluation_result(self, evaluation_result: EvaluationResult) -> EvaluationResult:
@@ -160,11 +164,11 @@ class EvaluationCallbackHandler:
         for callback in self.callbacks:
             callback.from_robot(robot=robot)
 
-    def before_step(self, observations: np.ndarray, actions: np.ndarray) -> None:
+    def before_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray) -> None:
         for callback in self.callbacks:
             callback.before_step(observations=observations, actions=actions)
 
-    def after_step(self, observations: np.ndarray, actions: np.ndarray, info: Optional[Dict] = None) -> None:
+    def after_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray, info: Optional[Dict] = None) -> None:
         for callback in self.callbacks:
             callback.after_step(observations=observations, actions=actions, info=info)
 

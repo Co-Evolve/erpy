@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import gym
 import numpy as np
 
-from erpy.framework.phenome import Robot
+from erpy.framework.phenome import Morphology
 
 Environment = gym.Env
 
@@ -16,9 +16,18 @@ class EnvironmentConfig(metaclass=abc.ABCMeta):
     seed: int
     random_state: np.random.RandomState
 
+    _observation_specification = None
+    _action_specification = None
+
     @abc.abstractmethod
-    def environment(self, robot: Robot) -> Environment:
+    def environment(self, morphology: Morphology) -> Environment:
         raise NotImplementedError
+
+    def observation_specification(self) -> gym.Space:
+        return self._observation_specification
+
+    def action_specification(self) -> gym.Space:
+        return self._action_specification
 
     @property
     @abc.abstractmethod

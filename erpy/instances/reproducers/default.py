@@ -4,6 +4,7 @@ from typing import Type
 
 from erpy.framework.population import Population
 from erpy.framework.reproducer import ReproducerConfig, Reproducer
+from erpy.instances.populations.default import DefaultPopulation
 
 
 class DefaultReproducerConfig(ReproducerConfig):
@@ -16,8 +17,8 @@ class DefaultReproducer(Reproducer):
     def __init__(self, config: ReproducerConfig) -> None:
         super().__init__(config)
 
-    def initialise_population(self, population: Population) -> None:
-        num_to_generate = population.population_size
+    def initialise_population(self, population: DefaultPopulation) -> None:
+        num_to_generate = population.config.population_size
 
         for i in range(num_to_generate):
             # Create genome
@@ -29,18 +30,18 @@ class DefaultReproducer(Reproducer):
             population.genomes[genome_id] = genome
 
             # Initial genomes should always be evaluated
-            population.to_evaluate.append(genome_id)
+            population.to_evaluate.add(genome_id)
 
     def reproduce(self, population: Population) -> None:
-        for parent_id in population.to_reproduce:
-            parent_genome = population.genomes[parent_id]
+        amount_to_create = population.config.population_size - len(population.to_evaluate)
 
+        for _ in range(amount_to_create):
+            parent_id = self.config.genome_config.random_state.choice(list(population.to_reproduce))
+            parent_genome = population.genomes[parent_id]
             child_genome = parent_genome.mutate(self.next_genome_id)
 
             # Add the child to the population
             population.genomes[child_genome.genome_id] = child_genome
 
             # New children should always be evaluated
-            population.to_evaluate.append(child_genome.genome_id)
-
-        population.to_reproduce.clear()
+            population.to_evaluate.add(child_genome.genome_id)

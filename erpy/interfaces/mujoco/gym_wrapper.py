@@ -2,10 +2,12 @@
 Source: https://github.com/denisyarats/dmc2gym/blob/master/dmc2gym/wrappers.py
 Code was slightly adapted.
 """
+from typing import Dict
+
 import gym
 import numpy as np
 from dm_control.mujoco import wrapper
-from dm_env import specs
+from dm_env import specs, TimeStep
 from gym import core, spaces
 
 
@@ -45,6 +47,15 @@ def _flatten_obs(obs):
         return np.concatenate(obs_pieces, axis=0)
     except ValueError:
         return np.array([])
+
+
+def get_clean_obs(timestep: TimeStep) -> Dict[str, np.ndarray]:
+    obs = timestep.observation
+    cleaned_obs = dict()
+    for key, value in obs.items():
+        cleaned_key = key.split('/')[-1]
+        cleaned_obs[cleaned_key] = value.flatten()
+    return cleaned_obs
 
 
 class DMC2GymWrapper(core.Env):
@@ -88,7 +99,6 @@ class DMC2GymWrapper(core.Env):
                 self._env.observation_spec().values(),
                 np.float64
             )
-        self.current_state = None
 
         # set seed
         self.seed(seed=seed)
@@ -112,7 +122,7 @@ class DMC2GymWrapper(core.Env):
             if self._channels_first:
                 obs = obs.transpose((2, 0, 1)).copy()
         else:
-            obs = _flatten_obs(time_step.observation)
+            obs = get_clean_obs(time_step)
         return obs
 
     @property
@@ -128,21 +138,22 @@ class DMC2GymWrapper(core.Env):
     def step(self, action: np.ndarray):
         action = action.clip(min=self.action_space.low, max=self.action_space.high)
         reward = 0
-        info = {}  # {'internal_state': self._env.physics.get_state().copy()}
         time_step = self._env.step(action)
+        info = {}
         reward += time_step.reward or 0
         done = time_step.last()
         obs = self._get_obs(time_step)
 
-        self.current_state = _flatten_obs(time_step.observation)
-        info.update(self._env.task.get_info(time_step=time_step, physics=self._env.physics))
+        try:
+            info.update(self._env.task.get_info(time_step=time_step, physics=self._env.physics))
+        except AttributeError:
+            pass
         info['discount'] = time_step.discount
 
         return obs, reward, done, info
 
     def reset(self):
         time_step = self._env.reset()
-        self.current_state = _flatten_obs(time_step.observation)
         obs = self._get_obs(time_step)
         return obs
 
@@ -178,6 +189,7 @@ class DMC2GymWrapper(core.Env):
             specific_view = np.hstack(pixels_specific)
             view = np.vstack((view, specific_view))
         return view
+
 
 class HistoryWrapper(gym.Wrapper):
     """

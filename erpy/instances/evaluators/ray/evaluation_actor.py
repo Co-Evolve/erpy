@@ -8,9 +8,9 @@ from erpy.framework.evaluator import EvaluatorConfig, EvaluationResult, Evaluati
 from erpy.framework.genome import Genome
 
 
-def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
+def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
     @ray.remote(num_cpus=config.evaluator_config.num_cores_per_worker)
-    class BaseEvaluationActor(EvaluationActor):
+    class RayEvaluationActor(EvaluationActor):
         def __init__(self, config: EvaluatorConfig) -> None:
             super().__init__(config=config)
 
@@ -41,7 +41,7 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
                         self.callback_handler.from_robot(robot)
 
                         self.callback_handler.update_environment_config(self.config.environment_config)
-                        env = self.config.environment_config.environment(robot=robot)
+                        env = self.config.environment_config.environment(morphology=robot.morphology)
                         self.callback_handler.from_env(env)
 
                     robot.reset()
@@ -86,4 +86,4 @@ def make_base_evaluation_actor(config: EAConfig) -> Type[EvaluationActor]:
 
             return evaluation_result
 
-    return BaseEvaluationActor
+    return RayEvaluationActor

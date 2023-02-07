@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+from typing import Union, Dict
 
 import numpy as np
 
@@ -32,14 +33,13 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
             self._build()
         return self._morphology
 
-    @abc.abstractmethod
     def reset(self) -> None:
         """
         Called at the start of every episode.
         Use this to reset the controller if needed.
         :return:
         """
-        raise NotImplementedError
+        pass
 
     @property
     def controller(self) -> Controller:
@@ -65,5 +65,5 @@ class Controller(Phenome, metaclass=abc.ABCMeta):
         super().__init__(specification=specification)
 
     @abc.abstractmethod
-    def __call__(self, observations: np.ndarray) -> np.ndarray:
+    def __call__(self, observations: Union[np.ndarray, Dict[str, np.ndarray]]) -> np.ndarray:
         raise NotImplementedError
