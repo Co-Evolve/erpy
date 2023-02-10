@@ -12,7 +12,6 @@ from tqdm import tqdm
 from erpy.framework.ea import EAConfig
 from erpy.framework.evaluator import EvaluatorConfig, EvaluationActor, Evaluator
 from erpy.framework.population import Population
-from erpy.instances.evaluators.ray.evaluation_actor import ray_evaluation_actor_factory
 
 
 @dataclass
@@ -26,7 +25,7 @@ class DistributedEvaluatorConfig(EvaluatorConfig, ABC):
 
 
 @dataclass
-class RayDistributedEvaluatorConfig(DistributedEvaluatorConfig):
+class RayEvaluatorConfig(DistributedEvaluatorConfig, ABC):
     evaluation_timeout: Optional[int] = None
     log_to_driver: bool = False
     logging_level: int = logging.ERROR
@@ -35,7 +34,7 @@ class RayDistributedEvaluatorConfig(DistributedEvaluatorConfig):
 
     @property
     def actor_factory(self) -> Callable[[DistributedEvaluatorConfig], Type[ray.actor.ActorClass]]:
-        return ray_evaluation_actor_factory
+        raise NotImplementedError
 
     @property
     def evaluator(self) -> Type[RayDistributedEvaluator]:
@@ -51,7 +50,7 @@ class RayDistributedEvaluator(Evaluator):
         self._build_pool()
 
     @property
-    def config(self) -> RayDistributedEvaluatorConfig:
+    def config(self) -> RayEvaluatorConfig:
         return super().config
 
     def _configure_ray(self) -> None:
@@ -79,14 +78,14 @@ class RayDistributedEvaluator(Evaluator):
                 lambda worker, genome: worker.evaluate.remote(genome=genome, analyze=analyze), genome)
             population.under_evaluation.add(genome.genome_id)
 
-        pbar = tqdm(desc=f"[RayDistributedEvaluator] Generation {population.generation}\t-\tReceived results from workers",
-                    total=len(target_genomes))
+        pbar = tqdm(
+            desc=f"[RayDistributedEvaluator] Generation {population.generation}\t-\tReceived results from workers",
+            total=len(target_genomes))
         timeout = None
         while self.pool.has_next():
             try:
                 evaluation_result = self.pool.get_next_unordered(timeout=timeout)
-                genome = all_genomes[evaluation_result.genome_id]
-                population.evaluation_results[genome.genome_id] = evaluation_result
+                population.evaluation_results.append(evaluation_result)
                 timeout = self.config.evaluation_timeout
                 pbar.update(1)
             except TimeoutError:

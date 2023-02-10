@@ -5,22 +5,20 @@ from dataclasses import dataclass
 
 import gym
 import numpy as np
+from stable_baselines3.common.vec_env import DummyVecEnv
 
-from erpy.framework.phenome import Morphology
+import erpy.framework.phenome as phenome
 
 Environment = gym.Env
 
 
 @dataclass
 class EnvironmentConfig(metaclass=abc.ABCMeta):
-    seed: int
-    random_state: np.random.RandomState
-
     _observation_specification = None
     _action_specification = None
 
     @abc.abstractmethod
-    def environment(self, morphology: Morphology) -> Environment:
+    def environment(self, morphology: phenome.Morphology) -> Environment:
         raise NotImplementedError
 
     def observation_specification(self) -> gym.Space:

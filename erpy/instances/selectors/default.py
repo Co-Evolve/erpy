@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
 
-import numpy as np
-
 from erpy.framework.population import Population
 from erpy.framework.selector import SelectorConfig, Selector
 
@@ -30,8 +28,8 @@ class DefaultSelector(Selector):
         return self._config
 
     def select(self, population: Population) -> None:
-        evaluation_results = list(population.evaluation_results.values())
+        evaluation_results = population.evaluation_results
         sorted_evaluation_results = sorted(evaluation_results, key=lambda er: er.fitness, reverse=True)
 
         for evaluation_result in sorted_evaluation_results[:self.config.amount_to_select]:
-            population.to_reproduce.add(evaluation_result.genome_id)
+            population.to_reproduce.add(evaluation_result.genome.genome_id)

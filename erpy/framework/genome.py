@@ -15,8 +15,6 @@ from erpy.utils.math import renormalize
 
 @dataclass
 class GenomeConfig(metaclass=abc.ABCMeta):
-    random_state: np.random.RandomState
-
     @property
     @abc.abstractmethod
     def genome(self) -> Type[Genome]:

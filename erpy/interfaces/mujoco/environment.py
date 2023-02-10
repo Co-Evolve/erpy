@@ -9,6 +9,7 @@ import gym
 from dm_control import composer
 from stable_baselines3.common.monitor import Monitor
 
+import erpy
 from erpy.framework.environment import EnvironmentConfig, Environment
 from erpy.interfaces.mujoco.gym_wrapper import DMC2GymWrapper
 from erpy.interfaces.mujoco.phenome import MJCMorphology
@@ -19,14 +20,14 @@ def default_make_mjc_env(config: MJCEnvironmentConfig, morphology: MJCMorphology
     task.set_timesteps(control_timestep=config.control_timestep,
                        physics_timestep=config.physics_timestep)
     env = composer.Environment(task=task,
-                               random_state=config.random_state,
+                               random_state=erpy.random_state,
                                time_limit=config.simulation_time)
     return env
 
 
 def dm_control_to_gym_environment(config: MJCEnvironmentConfig, environment: composer.Environment) -> gym.Env:
     env = DMC2GymWrapper(env=environment,
-                         seed=config.seed,
+                         seed=erpy.seed,
                          from_pixels=False,
                          camera_ids=config.camera_ids)
     env = Monitor(env)

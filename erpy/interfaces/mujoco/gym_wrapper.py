@@ -38,6 +38,25 @@ def _spec_to_box(spec, dtype):
     return spaces.Box(low, high, dtype=dtype)
 
 
+def _spec_to_dict(spec, dtype):
+    def extract_min_max(s):
+        assert s.dtype == np.float64 or s.dtype == np.float32
+        dim = int(np.prod(s.shape))
+        if type(s) == specs.Array:
+            bound = np.inf * np.ones(dim, dtype=np.float32)
+            return -bound, bound
+        elif type(s) == specs.BoundedArray:
+            zeros = np.zeros(dim, dtype=np.float32)
+            return s.minimum + zeros, s.maximum + zeros
+
+    d = dict()
+    for key, array in spec.items():
+        mn, mx = extract_min_max(array)
+        d[key] = spaces.Box(low=mn, high=mx, dtype=dtype)
+
+    return spaces.Dict(d)
+
+
 def _flatten_obs(obs):
     obs_pieces = []
     for v in obs.values():
@@ -49,13 +68,19 @@ def _flatten_obs(obs):
         return np.array([])
 
 
-def get_clean_obs(timestep: TimeStep) -> Dict[str, np.ndarray]:
+def get_clean_obs(timestep: TimeStep, dtype = np.float32) -> Dict[str, np.ndarray]:
     obs = timestep.observation
     cleaned_obs = dict()
     for key, value in obs.items():
-        cleaned_key = key.split('/')[-1]
-        cleaned_obs[cleaned_key] = value.flatten()
+        cleaned_obs[key] = value.flatten().astype(dtype)
     return cleaned_obs
+
+
+def vectorize_observations(observations: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    vectorized_obs = dict()
+    for key, value in observations.items():
+        vectorized_obs[key] = value[None]
+    return vectorized_obs
 
 
 class DMC2GymWrapper(core.Env):
@@ -86,7 +111,7 @@ class DMC2GymWrapper(core.Env):
         # create task
         self._env = env
 
-        self.action_space = _spec_to_box([self._env.action_spec()], float)
+        self.action_space = _spec_to_box([self._env.action_spec()], np.float32)
 
         # create observation space
         if from_pixels:
@@ -95,9 +120,9 @@ class DMC2GymWrapper(core.Env):
                 low=0, high=255, shape=shape, dtype=np.uint8
             )
         else:
-            self.observation_space = _spec_to_box(
-                self._env.observation_spec().values(),
-                np.float64
+            self.observation_space = _spec_to_dict(
+                self._env.observation_spec(),
+                np.float32
             )
 
         # set seed

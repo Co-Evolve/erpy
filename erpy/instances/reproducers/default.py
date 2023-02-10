@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Type
 
+import erpy
 from erpy.framework.population import Population
 from erpy.framework.reproducer import ReproducerConfig, Reproducer
 from erpy.instances.populations.default import DefaultPopulation
@@ -36,7 +37,7 @@ class DefaultReproducer(Reproducer):
         amount_to_create = population.config.population_size - len(population.to_evaluate)
 
         for _ in range(amount_to_create):
-            parent_id = self.config.genome_config.random_state.choice(list(population.to_reproduce))
+            parent_id = erpy.random_state.choice(list(population.to_reproduce))
             parent_genome = population.genomes[parent_id]
             child_genome = parent_genome.mutate(self.next_genome_id)
 

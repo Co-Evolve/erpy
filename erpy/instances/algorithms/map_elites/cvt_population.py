@@ -9,6 +9,7 @@ from scipy.spatial import KDTree
 from sklearn.cluster import MiniBatchKMeans
 from tqdm import tqdm
 
+import erpy
 from erpy.instances.algorithms.map_elites.map_elites_cell import MAPElitesCell
 from erpy.instances.algorithms.map_elites.types import CellIndex, PhenomeDescription
 from erpy.framework.ea import EAConfig
@@ -55,7 +56,7 @@ class CVTMAPElitesPopulation(Population):
 
         # Extract centroids
         k_means = MiniBatchKMeans(n_clusters=self.config.num_niches,
-                                  random_state=self._ea_config.reproducer_config.genome_config.random_state)
+                                  random_state=erpy.random_state)
         k_means.fit(data)
         centroids = k_means.cluster_centers_
 

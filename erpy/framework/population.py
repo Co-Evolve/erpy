@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass
 from itertools import count
-from typing import Dict, Type, Any, TYPE_CHECKING, Set
+from typing import Dict, Type, Any, TYPE_CHECKING, Set, List
 
 import erpy.framework.evaluator as evaluator
 import erpy.framework.genome as genome
@@ -40,17 +40,12 @@ class Population(metaclass=abc.ABCMeta):
         self._under_evaluation: Set[int] = set()
 
         # This should hold the evaluation result of every genome in genomes after Evaluation
-        self.evaluation_results: Dict[int, evaluator.EvaluationResult] = dict()
-        self._all_time_best_genome: genome.Genome = None
+        self.evaluation_results: List[evaluator.EvaluationResult] = list()
         self._all_time_best_evaluation_result: evaluator.EvaluationResult = None
 
     @property
     def logging_data(self) -> Dict[str, Any]:
         return self._logging_data
-
-    @property
-    def all_time_best_genome(self) -> genome.Genome:
-        return self._all_time_best_genome
 
     @property
     def all_time_best_evaluation_result(self) -> evaluator.EvaluationResult:
@@ -131,12 +126,11 @@ class Population(metaclass=abc.ABCMeta):
 
         self.to_evaluate.clear()
 
-        for genome_id in self.evaluation_results.keys():
-            self.under_evaluation.remove(genome_id)
-
-        for evaluation_result in self.evaluation_results.values():
-            if self.all_time_best_genome is None or self.all_time_best_evaluation_result.fitness < evaluation_result.fitness:
-                self._all_time_best_genome = self.genomes[evaluation_result.genome_id]
+        for evaluation_result in self.evaluation_results:
+            self.genomes[evaluation_result.genome.genome_id] = evaluation_result.genome
+            self.under_evaluation.remove(evaluation_result.genome.genome_id)
+            if self.all_time_best_evaluation_result is None or \
+                    self.all_time_best_evaluation_result.fitness < evaluation_result.fitness:
                 self._all_time_best_evaluation_result = evaluation_result
 
     def get_next_child_id(self) -> int:

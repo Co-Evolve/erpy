@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import abc
-from typing import Union, Dict
+from typing import Union, Dict, Tuple, Optional
 
 import numpy as np
+from stable_baselines3.common.callbacks import BaseCallback
 
+import erpy.framework.environment as env
+import erpy.framework.evaluator as evaluator
 import erpy.framework.specification as spec
 
 
@@ -23,15 +26,25 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
         self._morphology = None
         self._controller = None
 
-    @abc.abstractmethod
-    def _build(self) -> None:
-        raise NotImplementedError
-
     @property
     def morphology(self) -> Morphology:
         if self._morphology is None:
-            self._build()
+            self._morphology = self._build_morphology()
         return self._morphology
+
+    @property
+    def controller(self) -> Controller:
+        if self._controller is None:
+            self._controller = self._build_controller()
+        return self._controller
+
+    @abc.abstractmethod
+    def _build_morphology(self) -> Morphology:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _build_controller(self) -> Morphology:
+        raise NotImplementedError
 
     def reset(self) -> None:
         """
@@ -42,12 +55,6 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
         pass
 
     @property
-    def controller(self) -> Controller:
-        if self._controller is None:
-            self._build()
-        return self._controller
-
-    @property
     def specification(self) -> spec.RobotSpecification:
         return super().specification
 
@@ -56,14 +63,50 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
 
 
 class Morphology(Phenome, metaclass=abc.ABCMeta):
-    def __init__(self, specification: spec.MorphologySpecification):
+    def __init__(self, specification: spec.RobotSpecification):
         super().__init__(specification=specification)
+
+    @property
+    def specification(self) -> spec.RobotSpecification:
+        return self._specification
+
+    @property
+    def controller_specification(self) -> spec.ControllerSpecification:
+        return self.specification.controller_specification
+
+    @property
+    def morphology_specification(self) -> spec.MorphologySpecification:
+        return self.specification.morphology_specification
 
 
 class Controller(Phenome, metaclass=abc.ABCMeta):
-    def __init__(self, specification: spec.ControllerSpecification):
+    def __init__(self, specification: spec.RobotSpecification):
         super().__init__(specification=specification)
+        self._environment = None
+
+    @property
+    def specification(self) -> spec.RobotSpecification:
+        return self._specification
+
+    @property
+    def controller_specification(self) -> spec.ControllerSpecification:
+        return self.specification.controller_specification
+
+    @property
+    def morphology_specification(self) -> spec.MorphologySpecification:
+        return self.specification.morphology_specification
+
+    def set_environment(self, environment: env.Environment) -> None:
+        self._environment = environment
 
     @abc.abstractmethod
-    def __call__(self, observations: Union[np.ndarray, Dict[str, np.ndarray]]) -> np.ndarray:
+    def __call__(self, observations: Union[np.ndarray, Dict[str, np.ndarray]],
+                 deterministic: bool = True) -> np.ndarray:
         raise NotImplementedError
+
+    def predict(self, observations: Union[np.ndarray, Dict[str, np.ndarray]], *args, **kwargs) -> Tuple[
+        np.ndarrayy, Optional[np.ndarray]]:
+        return self(observations=observations, *args, **kwargs), None
+
+    def learn(self, total_timesteps: int, callback: Union[evaluator.EvaluationCallback, BaseCallback]) -> None:
+        pass

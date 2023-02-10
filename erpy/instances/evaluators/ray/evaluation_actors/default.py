@@ -1,26 +1,42 @@
-from typing import Type
+from dataclasses import dataclass
+from typing import Type, Callable
 
 import ray
 from dm_control.rl.control import PhysicsError
 
 from erpy.framework.ea import EAConfig
-from erpy.framework.evaluator import EvaluatorConfig, EvaluationResult, EvaluationActor
+from erpy.framework.evaluator import EvaluationResult, EvaluationActor
 from erpy.framework.genome import Genome
+from erpy.instances.evaluators.ray.evaluator import DistributedEvaluatorConfig, RayEvaluatorConfig, \
+    RayDistributedEvaluator
 
 
-def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
+@dataclass
+class RayDefaultEvaluatorConfig(RayEvaluatorConfig):
+    @property
+    def actor_factory(self) -> Callable[[DistributedEvaluatorConfig], Type[ray.actor.ActorClass]]:
+        return ray_default_evaluation_actor_factory
+
+    @property
+    def evaluator(self) -> Type[RayDistributedEvaluator]:
+        return RayDistributedEvaluator
+
+
+def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
     @ray.remote(num_cpus=config.evaluator_config.num_cores_per_worker)
-    class RayEvaluationActor(EvaluationActor):
-        def __init__(self, config: EvaluatorConfig) -> None:
+    class RayDefaultEvaluationActor(EvaluationActor):
+        def __init__(self, config: EAConfig) -> None:
             super().__init__(config=config)
 
         @property
-        def config(self) -> EvaluatorConfig:
+        def config(self) -> RayDefaultEvaluatorConfig:
             return super().config
 
-        def evaluate(self, genome: Genome, analyze: bool = False) -> EvaluationResult:
-            self.callback_handler.reset(analyze=analyze)
-            self.callback_handler.from_genome(genome)
+        def evaluate(self, genome: Genome) -> EvaluationResult:
+            shared_callback_data = dict()
+            self._callback.before_evaluation(config=self._ea_config, shared_callback_data=shared_callback_data)
+
+            self._callback.from_genome(genome)
 
             robot, env = None, None
 
@@ -30,7 +46,7 @@ def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
             validity_failures = 0
             for episode in range(self.config.num_eval_episodes):
                 try:
-                    self.callback_handler.before_episode()
+                    self._callback.before_episode()
 
                     if robot is None or self.config.hard_episode_reset:
                         specification = genome.specification
@@ -38,11 +54,12 @@ def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
                             raise AssertionError
 
                         robot = self.config.robot(genome.specification)
-                        self.callback_handler.from_robot(robot)
+                        self._callback.from_robot(robot)
 
-                        self.callback_handler.update_environment_config(self.config.environment_config)
+                        self._callback.update_environment_config(self.config.environment_config)
                         env = self.config.environment_config.environment(morphology=robot.morphology)
-                        self.callback_handler.from_env(env)
+                        robot.controller.set_environment(env)
+                        self._callback.from_env(env)
 
                     robot.reset()
                     observations = env.reset()
@@ -54,14 +71,14 @@ def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
                     while not done:
                         actions = robot(observations)
 
-                        self.callback_handler.before_step(observations=observations, actions=actions)
+                        self._callback.before_step(observations=observations, actions=actions)
                         observations, reward, done, info = env.step(actions)
 
-                        self.callback_handler.after_step(observations=observations, actions=actions, info=info)
+                        self._callback.after_step(observations=observations, actions=actions, info=info)
 
                         rewards.append(reward)
 
-                    self.callback_handler.after_episode()
+                    self._callback.after_episode()
 
                     episode_fitness = self.config.reward_aggregator(rewards)
                     episode_fitnesses.append(episode_fitness)
@@ -79,11 +96,12 @@ def ray_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
 
             env.close()
             fitness = self.config.episode_aggregator(episode_fitnesses)
-            evaluation_result = EvaluationResult(genome_id=genome.genome_id, fitness=fitness,
+            evaluation_result = EvaluationResult(genome=genome, fitness=fitness,
                                                  info={"episode_failures": {"physics": physics_failures,
                                                                             "validity": validity_failures}})
-            evaluation_result = self.callback_handler.update_evaluation_result(evaluation_result)
+            self._callback.update_evaluation_result(evaluation_result)
 
+            self._callback.after_evaluation()
             return evaluation_result
 
-    return RayEvaluationActor
+    return RayDefaultEvaluationActor

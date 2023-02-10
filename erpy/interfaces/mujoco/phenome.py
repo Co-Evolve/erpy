@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from abc import ABC
-from typing import Tuple, Union, List
+from typing import Union, List
 
 import numpy as np
 from dm_control import composer, mjcf
@@ -10,7 +10,7 @@ from dm_control.mjcf import export_with_assets
 from scipy.spatial.transform import Rotation
 
 from erpy.framework.phenome import Morphology, Robot
-from erpy.framework.specification import MorphologySpecification, RobotSpecification
+from erpy.framework.specification import MorphologySpecification, RobotSpecification, ControllerSpecification
 
 
 class MJCRobot(Robot, ABC):
@@ -23,15 +23,11 @@ class MJCRobot(Robot, ABC):
 
 
 class MJCMorphology(Morphology, composer.Entity, metaclass=abc.ABCMeta):
-    def __init__(self, specification: MorphologySpecification) -> None:
+    def __init__(self, specification: RobotSpecification) -> None:
         self._mjcf_model = mjcf.RootElement(model="morphology")
         self._mjcf_body = self._mjcf_model.worldbody.add('body')
         Morphology.__init__(self, specification)
         composer.Entity.__init__(self)
-
-    @property
-    def specification(self) -> MorphologySpecification:
-        return self._specification
 
     @property
     def actuators(self) -> List[mjcf.Element]:
@@ -86,8 +82,16 @@ class MJCMorphologyPart(Morphology, metaclass=abc.ABCMeta):
         self._build(*args, **kwargs)
 
     @property
-    def specification(self) -> MorphologySpecification:
+    def specification(self) -> RobotSpecification:
         return self._parent.specification
+
+    @property
+    def morphology_specification(self) -> MorphologySpecification:
+        return self._parent.morphology_specification
+
+    @property
+    def controller_specification(self) -> ControllerSpecification:
+        return self._parent.controller_specification
 
     @property
     def mjcf_model(self) -> mjcf.RootElement:

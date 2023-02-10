@@ -40,8 +40,7 @@ class DefaultLogger(Logger):
         return log_str
 
     def _log_fitness(self, population: Population) -> None:
-        evaluation_results = list(population.evaluation_results.values())
-        fitnesses = [er.fitness for er in evaluation_results]
+        fitnesses = [er.fitness for er in population.evaluation_results]
         log_str = self._values_log_string(name="fitness", values=fitnesses, generation=population.generation)
         log_str += f"\n\tall time highest: {population.all_time_best_evaluation_result.fitness}"
         logging.info(log_str)

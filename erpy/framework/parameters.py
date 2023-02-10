@@ -5,6 +5,8 @@ from typing import Iterable, List, Optional, T
 
 import numpy as np
 
+from erpy import random_state
+
 
 class Parameter(metaclass=abc.ABCMeta):
     def __init__(self, value: T) -> None:
@@ -87,7 +89,7 @@ class ContinuousParameter(Parameter):
         self._value = value
 
     def set_random_value(self) -> None:
-        self._value = np.random.uniform(low=self.low, high=self.high)
+        self._value = random_state.uniform(low=self.low, high=self.high)
 
 
 class RangeParameter(Parameter):
@@ -114,7 +116,7 @@ class RangeParameter(Parameter):
         self._value = value
 
     def set_random_value(self) -> None:
-        self._value = np.random.uniform(low=self.low, high=self.high, size=2)
+        self._value = random_state.uniform(low=self.low, high=self.high, size=2)
 
 
 class DiscreteParameter(Parameter):
@@ -134,7 +136,7 @@ class DiscreteParameter(Parameter):
         self._value = value
 
     def set_random_value(self) -> None:
-        self._value = np.random.choice(a=self.options)
+        self._value = random_state.choice(a=self.options)
 
 
 class MultiDiscreteParameter(Parameter):
@@ -161,5 +163,5 @@ class MultiDiscreteParameter(Parameter):
         self._value = value
 
     def set_random_value(self) -> None:
-        num_parameters = np.random.randint(low=self.min_size, high=self.max_size + 1)
-        self._value = np.random.choice(a=self.options, size=num_parameters, replace=False)
+        num_parameters = random_state.randint(low=self.min_size, high=self.max_size + 1)
+        self._value = random_state.choice(a=self.options, size=num_parameters, replace=False)

@@ -55,52 +55,16 @@ class EA:
     def __init__(self, config: EAConfig):
         self._config = config
 
-        self._population = None
-        self._evaluator = None
-        self._selector = None
-        self._reproducer = None
-        self._logger = None
-        self._saver = None
+        self.population = self.config.population
+        self.selector = self.config.selector
+        self.reproducer = self.config.reproducer
+        self.logger = self.config.logger
+        self.saver = self.config.saver
+        self.evaluator = self.config.evaluator
 
     @property
     def config(self) -> EAConfig:
         return self._config
-
-    @property
-    def population(self) -> Population:
-        if self._population is None:
-            self._population = self.config.population
-        return self._population
-
-    @property
-    def evaluator(self) -> Evaluator:
-        if self._evaluator is None:
-            self._evaluator = self.config.evaluator
-        return self._evaluator
-
-    @property
-    def selector(self) -> Selector:
-        if self._selector is None:
-            self._selector = self.config.selector
-        return self._selector
-
-    @property
-    def reproducer(self) -> Reproducer:
-        if self._reproducer is None:
-            self._reproducer = self.config.reproducer
-        return self._reproducer
-
-    @property
-    def logger(self) -> Logger:
-        if self._logger is None:
-            self._logger = self.config.logger
-        return self._logger
-
-    @property
-    def saver(self) -> Saver:
-        if self._saver is None:
-            self._saver = self.config.saver
-        return self._saver
 
     def is_done(self) -> bool:
         is_done = False
