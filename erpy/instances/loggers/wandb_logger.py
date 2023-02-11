@@ -22,6 +22,7 @@ class WandBLoggerConfig(LoggerConfig):
     tags: List[str]
     update_saver_path: bool
     pre_initialise_wandb: bool = True
+    enable_tensorboard_backend: bool = False
     _run_name: str = None
 
     @property
@@ -69,7 +70,7 @@ def wandb_log_unknown(run: WandBRun, name: str, data: Any, step: int) -> None:
 
 class WandBLogger(Logger):
     def __init__(self, config: EAConfig):
-        super(WandBLogger, self).__init__(config=config)
+        super().__init__(config=config)
 
         self.run = None
         if self.config.pre_initialise_wandb:

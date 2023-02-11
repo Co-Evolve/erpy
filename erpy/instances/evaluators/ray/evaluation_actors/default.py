@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 from typing import Type, Callable
 
+import gym
 import ray
 from dm_control.rl.control import PhysicsError
 
 from erpy.framework.ea import EAConfig
 from erpy.framework.evaluator import EvaluationResult, EvaluationActor
 from erpy.framework.genome import Genome
+from erpy.framework.phenome import Robot
 from erpy.instances.evaluators.ray.evaluator import DistributedEvaluatorConfig, RayEvaluatorConfig, \
     RayDistributedEvaluator
+from erpy.instances.evaluators.ray.utils import create_vectorized_environment
 
 
 @dataclass
@@ -31,6 +34,15 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
         @property
         def config(self) -> RayDefaultEvaluatorConfig:
             return super().config
+
+        def _create_environment(self, robot: Robot) -> gym.vector.VectorEnv:
+            self._callback.update_environment_config(self.config.environment_config)
+            environment = create_vectorized_environment(
+                morphology_generator=lambda: self.config.robot(robot.specification).morphology,
+                environment_config=self.config.environment_config,
+                number_of_environments=self.config.num_cores_per_worker)
+            self._callback.from_env(environment)
+            return environment
 
         def evaluate(self, genome: Genome) -> EvaluationResult:
             shared_callback_data = dict()
@@ -57,7 +69,7 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
                         self._callback.from_robot(robot)
 
                         self._callback.update_environment_config(self.config.environment_config)
-                        env = self.config.environment_config.environment(morphology=robot.morphology)
+                        env = self._create_environment(robot=robot)
                         robot.controller.set_environment(env)
                         self._callback.from_env(env)
 
@@ -74,7 +86,8 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
                         self._callback.before_step(observations=observations, actions=actions)
                         observations, reward, done, info = env.step(actions)
 
-                        self._callback.after_step(observations=observations, actions=actions, info=info)
+                        self._callback.after_step(observations=observations, actions=actions,
+                                                  rewards=rewards, info=info)
 
                         rewards.append(reward)
 

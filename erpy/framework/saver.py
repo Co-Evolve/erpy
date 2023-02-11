@@ -34,7 +34,7 @@ class Saver(metaclass=abc.ABCMeta):
         Path(self.config.save_path).mkdir(parents=True, exist_ok=True)
 
     def should_save(self, generation: int) -> bool:
-        return generation % self.config.save_freq == 0
+        return generation % self.config.save_freq == 0 or generation == self._ea_config.num_generations
 
     @abc.abstractmethod
     def save(self, population: Population) -> None:

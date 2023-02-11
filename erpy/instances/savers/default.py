@@ -26,11 +26,14 @@ class DefaultSaver(Saver):
     def __init__(self, config: EAConfig) -> None:
         super().__init__(config)
 
+    def _save_population(self, population: Population) -> None:
+        path = str(Path(self.config.save_path) / f"generation_{population.generation}.pkl")
+        with open(path, "wb") as f:
+            pickle.dump(obj=population, file=f, protocol=pickle.HIGHEST_PROTOCOL)
+
     def save(self, population: Population) -> None:
         if self.should_save(generation=population.generation):
-            path = str(Path(self.config.save_path) / f"generation_{population.generation}.pkl")
-            with open(path, "wb") as f:
-                pickle.dump(obj=population, file=f, protocol=pickle.HIGHEST_PROTOCOL)
+            self._save_population(population=population)
 
     def load(self) -> Population:
         path = str(Path(self.config.save_path) / f"generation_*.pkl")

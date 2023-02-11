@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import pickle
-from typing import List, Iterable, TYPE_CHECKING, Callable, Type, Any
+from typing import List, Iterable, TYPE_CHECKING, Callable
 
 from erpy.framework.parameters import Parameter, FixedParameter
 
@@ -85,10 +85,6 @@ class SpecificationParameterizer(metaclass=abc.ABCMeta):
     def parameterize_specification(self, specification: Specification) -> None:
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def generate_parameterized_specification(self) -> Specification:
-        raise NotImplementedError
-
     def get_target_parameters(self, specification: Specification) -> List[Parameter]:
         target_parameters = []
         for parameter in specification.parameters:
@@ -96,15 +92,7 @@ class SpecificationParameterizer(metaclass=abc.ABCMeta):
                 target_parameters.append(parameter)
         return target_parameters
 
-    def set_target_parameters(self, specification: Specification, values: List[Any]) -> None:
-        assert len(values) == self.num_target_parameters
-        parameters = self.get_target_parameters(specification)
-        for parameter, value in zip(parameters, values):
-            parameter.value = value
-
-    @property
-    def num_target_parameters(self) -> int:
-        specification = self.generate_parameterized_specification()
+    def num_target_parameters(self, specification: Specification) -> int:
         target_parameters = self.get_target_parameters(specification)
         num_parameters = len(target_parameters)
         return num_parameters
@@ -112,11 +100,11 @@ class SpecificationParameterizer(metaclass=abc.ABCMeta):
 
 class RobotSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.ABCMeta):
     def __init__(self,
-                 specification_type: Type[RobotSpecification],
+                 specification_generator: Callable[[], RobotSpecification],
                  morphology_parameterizer: MorphologySpecificationParameterizer,
                  controller_parameterizer: ControllerSpecificationParameterizer) -> None:
         super().__init__()
-        self.specification_type = specification_type
+        self._specification_generator = specification_generator
         self._morphology_parameterizer = morphology_parameterizer
         self._controller_parameterizer = controller_parameterizer
 
@@ -125,11 +113,9 @@ class RobotSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.
         self._controller_parameterizer.parameterize_specification(specification.controller_specification)
 
     def generate_parameterized_specification(self) -> RobotSpecification:
-        morphology_specification = self._morphology_parameterizer.generate_parameterized_specification()
-        controller_specification = self._controller_parameterizer.generate_parameterized_specification()
-        specification = self.specification_type(morphology_specification=morphology_specification,
-                                                controller_specification=controller_specification)
-        return specification
+        robot_specification = self._specification_generator()
+        self.parameterize_specification(robot_specification)
+        return robot_specification
 
     def get_target_parameters(self, specification: RobotSpecification) -> List[Parameter]:
         morphology_parameters = self._morphology_parameterizer.get_target_parameters(
@@ -138,35 +124,31 @@ class RobotSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.
             specification.controller_specification)
         return morphology_parameters + controller_parameters
 
-    def set_target_parameters(self, specification: RobotSpecification, values: List[Any]) -> None:
-        assert len(values) == self.num_target_parameters
-        num_morphology_parameters = self._morphology_parameterizer.num_target_parameters
-        morphology_parameter_values = values[:num_morphology_parameters]
-        controller_parameter_values = values[num_morphology_parameters:]
-
-        self._morphology_parameterizer.set_target_parameters(specification=specification.morphology_specification,
-                                                             values=morphology_parameter_values)
-        self._controller_parameterizer.set_target_parameters(specification=specification.controller_specification,
-                                                             values=controller_parameter_values)
+    def get_parameter_labels(self, specification: RobotSpecification) -> List[str]:
+        morphology_labels = self._morphology_parameterizer.get_parameter_labels(specification.morphology_specification)
+        controller_labels = self._controller_parameterizer.get_parameter_labels(specification.controller_specification)
+        return morphology_labels + controller_labels
 
 
 class MorphologySpecificationParameterizer(SpecificationParameterizer, metaclass=abc.ABCMeta):
-    def __init__(self, specification_factory: Callable[[], MorphologySpecification]) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._specification_factory = specification_factory
 
-    def generate_parameterized_specification(self) -> MorphologySpecification:
-        specification = self._specification_factory()
-        self.parameterize_specification(specification)
-        return specification
+    @abc.abstractmethod
+    def parameterize_specification(self, specification: MorphologySpecification) -> None:
+        raise NotImplementedError
+
+    def get_parameter_labels(self, specification: MorphologySpecification) -> List[str]:
+        return []
 
 
 class ControllerSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.ABCMeta):
-    def __init__(self, specification_factory: Callable[[], ControllerSpecification]) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._specification_factory = specification_factory
 
-    def generate_parameterized_specification(self) -> ControllerSpecification:
-        specification = self._specification_factory()
-        self.parameterize_specification(specification)
-        return specification
+    @abc.abstractmethod
+    def parameterize_specification(self, specification: ControllerSpecification) -> None:
+        raise NotImplementedError
+
+    def get_parameter_labels(self, specification: ControllerSpecification) -> List[str]:
+        return []

@@ -3,16 +3,15 @@ from typing import Type, Callable
 
 import gym.vector
 import ray
-from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from erpy.framework.ea import EAConfig
-from erpy.framework.environment import Environment
 from erpy.framework.evaluator import EvaluationResult, EvaluationActor
 from erpy.framework.genome import Genome
 from erpy.framework.phenome import Robot
 from erpy.instances.evaluators.ray.evaluator import RayEvaluatorConfig, RayDistributedEvaluator, \
     DistributedEvaluatorConfig
+from erpy.instances.evaluators.ray.utils import create_vectorized_environment
 
 
 @dataclass
@@ -40,13 +39,10 @@ def ray_controller_learning_evaluation_actor_factory(config: EAConfig) -> Type[E
 
         def _create_environment(self, robot: Robot) -> gym.vector.VectorEnv:
             self._callback.update_environment_config(self.config.environment_config)
-
-            def make_env() -> Environment:
-                morphology = self.config.robot(robot.specification).morphology
-                env = self.config.environment_config.environment(morphology=morphology)
-                return env
-
-            environment = make_vec_env(make_env, n_envs=config.evaluator_config.num_cores_per_worker)
+            environment = create_vectorized_environment(
+                morphology_generator=lambda: self.config.robot(robot.specification).morphology,
+                environment_config=self.config.environment_config,
+                number_of_environments=self.config.num_cores_per_worker)
             self._callback.from_env(environment)
             return environment
 

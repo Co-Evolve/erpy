@@ -66,7 +66,7 @@ class RayDistributedEvaluator(Evaluator):
                    range(self.config.num_workers)]
         self.pool = ActorPool(workers)
 
-    def evaluate(self, population: Population, analyze: bool = False) -> None:
+    def evaluate(self, population: Population) -> None:
         all_genomes = population.genomes
         target_genome_ids = population.to_evaluate
 
@@ -75,7 +75,7 @@ class RayDistributedEvaluator(Evaluator):
         for genome in tqdm(target_genomes,
                            desc=f"[RayDistributedEvaluator] Generation {population.generation}\t-\tSending jobs to workers"):
             self.pool.submit(
-                lambda worker, genome: worker.evaluate.remote(genome=genome, analyze=analyze), genome)
+                lambda worker, genome: worker.evaluate.remote(genome=genome), genome)
             population.under_evaluation.add(genome.genome_id)
 
         pbar = tqdm(
