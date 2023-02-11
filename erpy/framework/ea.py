@@ -21,7 +21,6 @@ class EAConfig:
     saver_config: SaverConfig
 
     cli_args: Optional[Dict[str, Any]] = None
-    from_checkpoint: bool = False
     checkpoint_path: str = None
     num_generations: Optional[int] = None
     num_evaluations: Optional[int] = None
@@ -75,14 +74,7 @@ class EA:
         return is_done
 
     def run(self) -> None:
-        if self.config.from_checkpoint:
-            # todo: fix checkpointing
-            self.saver.load_checkpoint(checkpoint_path=self.config.checkpoint_path,
-                                       population=self.population)
-            self.reproducer.initialise_from_checkpoint(population=self.population)
-            self.selector.select(population=self.population)
-        else:
-            self.reproducer.initialise_population(self.population)
+        self.reproducer.initialise_population(self.population)
 
         while not self.is_done():
             self.population.before_reproduction()
@@ -102,8 +94,6 @@ class EA:
             self.population.after_selection()
             self.population.generation += 1
 
-        self._evaluator = None
-
     def load_genomes(self, path: Optional[str] = None) -> List[Genome]:
         if path is not None:
             self.config.saver_config.save_path = path
@@ -122,13 +112,12 @@ class EA:
         return genomes, self.analyze_genomes(genomes=genomes)
 
     def analyze_genomes(self, genomes: List[Genome]) -> Dict[int, EvaluationResult]:
-        # Reset population by recreating it
-        self._population = None
+        self.population = self.config.population
 
         for genome in genomes:
             self.population.genomes[genome.genome_id] = genome
             self.population.to_evaluate.add(genome.genome_id)
 
-        self.evaluator.evaluate(self.population, analyze=True)
+        self.evaluator.evaluate(self.population)
 
         return self.population.evaluation_results
