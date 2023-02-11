@@ -45,7 +45,6 @@ def wandb_initialise_run(project: str, group: Optional[str], tags: Optional[List
                       reinit=True,
                       tags=tags,
                       resume="allow",
-                      sync_tensorboard=True,
                       monitor_gym=True,
                       *args, **kwargs)
 
@@ -80,7 +79,8 @@ class WandBLogger(Logger):
         self.run = wandb_initialise_run(project=self.config.project_name,
                                         group=self.config.group,
                                         tags=self.config.tags,
-                                        config=config2dict(self.config))
+                                        config=config2dict(self.config),
+                                        sync_tensorboard=self.config.enable_tensorboard_backend)
         self.config.run_name = self.run.name
         self._update_saver_path()
 
