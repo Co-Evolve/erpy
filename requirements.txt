@@ -31,7 +31,6 @@ google-auth==2.16.0
 google-auth-oauthlib==0.4.6
 googleapis-common-protos==1.58.0
 gpustat==1.0.0
-grpcio @ file:///Users/runner/miniforge3/conda-bld/grpc-split_1675289367073/work
 gym==0.21.0
 gym-notices==0.0.8
 idna==3.4
@@ -71,6 +70,7 @@ pygame==2.1.2
 PyOpenGL==3.1.6
 pyparsing==3.0.9
 pyrsistent==0.19.3
+python==3.8.15
 python-dateutil==2.8.2
 pytz==2022.7.1
 PyYAML==6.0
