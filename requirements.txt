@@ -32,7 +32,7 @@ google-auth-oauthlib==0.4.6
 googleapis-common-protos==1.58.0
 gpustat==1.0.0
 grpcio==1.51.1
-gym==0.21.0
+git@github.com:sel3-2023-group-01/gym.git@master
 gym-notices==0.0.8
 idna==3.4
 importlib-metadata==4.13.0
