@@ -41,7 +41,7 @@ class Specification(metaclass=abc.ABCMeta):
 
 class RobotSpecification(Specification, metaclass=abc.ABCMeta):
     def __init__(self, morphology_specification: MorphologySpecification,
-                 controller_specification: ControllerSpecification) -> None:
+                 controller_specification: ControllerSpecification | None) -> None:
         super().__init__()
         self._morphology_specification = morphology_specification
         self._controller_specification = controller_specification
