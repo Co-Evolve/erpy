@@ -105,7 +105,7 @@ class Controller(Phenome, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     def predict(self, observations: Union[np.ndarray, Dict[str, np.ndarray]], *args, **kwargs) -> Tuple[
-        np.ndarrayy, Optional[np.ndarray]]:
+        np.ndarray, Optional[np.ndarray]]:
         return self(observations=observations, *args, **kwargs), None
 
     def learn(self, total_timesteps: int, callback: Union[evaluator.EvaluationCallback, BaseCallback]) -> None:

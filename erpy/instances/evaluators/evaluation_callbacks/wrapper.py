@@ -4,9 +4,10 @@ from stable_baselines3.common.callbacks import BaseCallback
 
 from erpy.framework.ea import EAConfig
 from erpy.framework.evaluator import EvaluationCallback
+from erpy.framework.genome import Genome
 
 
-class StableBaselinesEvaluationCallbackWrapper(EvaluationCallback):
+class EvaluationCallbackWrapper(EvaluationCallback):
     def __init__(self, callback: Type[BaseCallback], **kwargs):
         super().__init__()
         self._callback_creator = callback
@@ -16,6 +17,7 @@ class StableBaselinesEvaluationCallbackWrapper(EvaluationCallback):
     def before_evaluation(self, config: EAConfig, shared_callback_data: Dict[str, Any]) -> None:
         super().before_evaluation(config=config, shared_callback_data=shared_callback_data)
 
+    def from_genome(self, genome: Genome) -> None:
         self._callback = self._callback_creator(**self._kwargs)
 
     def __getattr__(self, item):

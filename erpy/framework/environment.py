@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
+from typing import Union
 
+import dm_control.composer
 import gym
 import numpy as np
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import VecEnv
 
 import erpy.framework.phenome as phenome
 
-Environment = gym.Env
+Environment = Union[gym.Env, dm_control.composer.Environment, VecEnv]
 
 
 @dataclass
