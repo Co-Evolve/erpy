@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Type, Union, Any, Iterable, Optional
+from typing import List, Type, Union, Any, Iterable
 
 import numpy as np
 import wandb
@@ -38,17 +38,6 @@ class WandBLoggerConfig(LoggerConfig):
         return WandBLogger
 
 
-def wandb_initialise_run(project: str, group: Optional[str], tags: Optional[List[str]], *args,
-                         **kwargs) -> WandBRun:
-    return wandb.init(project=project,
-                      group=group,
-                      reinit=True,
-                      tags=tags,
-                      resume="allow",
-                      monitor_gym=True,
-                      *args, **kwargs)
-
-
 def wandb_log_values(run: WandBRun, name: str, values: List[float], step: int) -> None:
     run.log({f'{name}_max': np.max(values),
              f'{name}_min': np.min(values),
@@ -76,11 +65,11 @@ class WandBLogger(Logger):
             self._initialise_wandb()
 
     def _initialise_wandb(self) -> None:
-        self.run = wandb_initialise_run(project=self.config.project_name,
-                                        group=self.config.group,
-                                        tags=self.config.tags,
-                                        config=config2dict(self.config),
-                                        sync_tensorboard=self.config.enable_tensorboard_backend)
+        self.run = wandb.init(project=self.config.project_name,
+                              group=self.config.group,
+                              tags=self.config.tags,
+                              config=config2dict(self.config),
+                              sync_tensorboard=self.config.enable_tensorboard_backend)
         self.config.run_name = self.run.name
         self._update_saver_path()
 
