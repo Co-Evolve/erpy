@@ -56,3 +56,4 @@ class CMAESLogger(WandBLogger):
     def log(self, population: CMAESPopulation) -> None:
         super().log(population)
         super()._log_evaluation_result_data(population)
+        self._log_cma_es_optimizer(population)
