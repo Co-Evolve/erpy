@@ -1,11 +1,23 @@
 from __future__ import annotations
 
 import abc
-from typing import Iterable, List, Optional, T
+from typing import Iterable, List, Optional, T, Type, Callable, Any
 
 import numpy as np
 
 from erpy import random_state
+
+
+def wrap2param(values: np.ndarray[float], param: Callable[[Any], Parameter]) -> np.ndarray[Parameter]:
+    orig_shape = values.shape
+    parameters = np.array([param(value) for value in values.flatten()])
+    return parameters.reshape(orig_shape)
+
+
+def unwrap_param(parameters: np.ndarray[Parameter]) -> np.ndarray[float]:
+    orig_shape = parameters.shape
+    values = np.array([param.value for param in parameters.flatten()])
+    return values.reshape(orig_shape)
 
 
 class Parameter(metaclass=abc.ABCMeta):

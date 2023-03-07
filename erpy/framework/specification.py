@@ -10,24 +10,28 @@ if TYPE_CHECKING:
     pass
 
 
+def find_parameters(o) -> List[Parameter]:
+    parameters = []
+    if isinstance(o, Parameter):
+        parameters.append(o)
+    elif isinstance(o, Iterable) and not isinstance(o, str):
+        for element in o:
+            parameters += find_parameters(element)
+    else:
+        for field_name in vars(o):
+            field = o.__getattribute__(field_name)
+            parameters += find_parameters(field)
+
+    return parameters
+
+
 class Specification(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
         pass
 
     @property
     def parameters(self) -> List[Parameter]:
-        parameters = []
-        for field_name in vars(self):
-            field = self.__getattribute__(field_name)
-            if isinstance(field, Parameter):
-                parameters.append(field)
-            elif isinstance(field, Iterable) and not isinstance(field, str):
-                for spec in field:
-                    if isinstance(spec, Specification):
-                        parameters += spec.parameters
-            elif isinstance(field, Specification):
-                parameters += field.parameters
-        return parameters
+        return find_parameters(self)
 
     def save(self, path: str):
         with open(path, 'wb') as handle:

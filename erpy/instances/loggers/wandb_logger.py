@@ -21,9 +21,9 @@ class WandBLoggerConfig(LoggerConfig):
     group: str
     tags: List[str]
     update_saver_path: bool
-    pre_initialise_wandb: bool = True
-    enable_tensorboard_backend: bool = False
-    _run_name: str = None
+    pre_initialise_wandb: bool
+    enable_tensorboard_backend: bool
+    _run_name: str
 
     @property
     def run_name(self) -> str:
