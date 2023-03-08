@@ -42,6 +42,10 @@ class Genome(abc.ABC):
     def parent_genome_id(self) -> int:
         return self._parent_genome_id
 
+    @parent_genome_id.setter
+    def parent_genome_id(self, genome_id: int) -> None:
+        self._parent_genome_id = genome_id
+
     @property
     def config(self) -> GenomeConfig:
         return self._config
