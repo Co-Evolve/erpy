@@ -32,13 +32,15 @@ class CMAESLogger(WandBLogger):
     def config(self) -> CMAESLoggerConfig:
         return super().config
 
-    def _log_parameters(self, prefix: str, parameters: np.ndarray, step: int) -> None:
+    def _log_parameters(self, prefix: str, parameters: np.ndarray, step: int, scale2param: bool = True) -> None:
         for parameter_value, label, parameter in zip(parameters, self._parameter_labels, self._parameters):
             assert isinstance(parameter, ContinuousParameter), "CMA-ES only works with ContinuousParameter."
-            rescaled_value = renormalize(data=parameter_value,
-                                         original_range=[0, 1],
-                                         target_range=[parameter.low, parameter.high])
-            wandb_log_value(run=self.run, name=f"CMA-ES/{prefix}/{label}", value=rescaled_value, step=step)
+            if scale2param:
+                parameter_value = renormalize(data=parameter_value,
+                                             original_range=[0, 1],
+                                             target_range=[parameter.low, parameter.high])
+
+            wandb_log_value(run=self.run, name=f"CMA-ES/{prefix}/{label}", value=parameter_value, step=step)
 
     def _log_cma_es_optimizer(self, population: CMAESPopulation) -> None:
         step = population.generation
@@ -49,7 +51,7 @@ class CMAESLogger(WandBLogger):
 
         self._log_parameters(prefix='best', parameters=best_solution, step=step)
         self._log_parameters(prefix='distribution_mean', parameters=distribution_mean, step=step)
-        self._log_parameters(prefix='distribution_stds', parameters=standard_deviations, step=step)
+        self._log_parameters(prefix='distribution_stds', parameters=standard_deviations, step=step, scale2param=False)
 
         wandb_log_value(run=self.run, name='CMA-ES/total_n_evaluations', value=total_n_evaluations, step=step)
 
