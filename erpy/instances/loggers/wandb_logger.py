@@ -68,7 +68,7 @@ class WandBLogger(Logger):
         self.run = wandb.init(project=self.config.project_name,
                               group=self.config.group,
                               tags=self.config.tags,
-                              config=config2dict(self.config),
+                              config=config2dict(self._ea_config),
                               sync_tensorboard=self.config.enable_tensorboard_backend)
         self.config.run_name = self.run.name
         self._update_saver_path()
