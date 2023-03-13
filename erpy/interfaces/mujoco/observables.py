@@ -3,7 +3,7 @@ from dm_env import specs
 
 
 class ConfinedMJCFFeature(MJCFFeature):
-    def __init__(self, low, high, num_obs_per_element, kind, mjcf_element, update_interval=1,
+    def __init__(self, low, high, shape, kind, mjcf_element, update_interval=1,
                  buffer_size=None, delay=None,
                  aggregator=None, corruptor=None, index=None) -> None:
         super(ConfinedMJCFFeature, self).__init__(kind=kind,
@@ -16,11 +16,11 @@ class ConfinedMJCFFeature(MJCFFeature):
                                                   index=index)
         self._low = low
         self._high = high
-        self._num_obs_per_element = num_obs_per_element
+        self._shape = shape
 
     @property
     def array_spec(self) -> specs.BoundedArray:
-        return specs.BoundedArray(shape=[self._num_obs_per_element * len(self._mjcf_element)],
+        return specs.BoundedArray(shape=self._shape,
                                   dtype=float,
                                   minimum=self._low,
                                   maximum=self._high
