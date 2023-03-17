@@ -17,7 +17,7 @@ def find_parameters(o) -> List[Parameter]:
     elif isinstance(o, Iterable) and not isinstance(o, str):
         for element in o:
             parameters += find_parameters(element)
-    else:
+    elif isinstance(o, Specification):
         for field_name in vars(o):
             field = o.__getattribute__(field_name)
             parameters += find_parameters(field)
