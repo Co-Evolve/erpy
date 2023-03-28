@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Iterable, List, Optional, T, Type, Callable, Any
+from typing import Iterable, List, Optional, T, Callable, Any
 
 import numpy as np
 
@@ -63,13 +63,17 @@ class FixedParameter(Parameter):
 
 
 class SynchronizedParameter(FixedParameter):
-    def __init__(self, linked_parameter: Parameter) -> None:
+    def __init__(self, linked_parameter: Parameter, fn: Optional[Callable] = None) -> None:
         super().__init__(linked_parameter.value)
         self._linked_parameter = linked_parameter
+        self._fn = fn
 
     @property
     def value(self) -> T:
-        return self._linked_parameter.value
+        if self._fn is not None:
+            return self._fn(self._linked_parameter.value)
+        else:
+            return self._linked_parameter.value
 
     def __eq__(self, other: Parameter) -> bool:
         eq = self.value == other.value
