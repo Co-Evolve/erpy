@@ -76,8 +76,7 @@ class Genome(abc.ABC):
 
 class DummyGenome(Genome):
     def __init__(self, genome_id: int, specification: RobotSpecification) -> None:
-        super(DummyGenome, self).__init__(config=None, genome_id=genome_id, parent_genome_id=None)
-        self._specification = specification
+        super(DummyGenome, self).__init__(specification=specification, config=None, genome_id=genome_id, parent_genome_id=None)
 
     @property
     def specification(self) -> RobotSpecification:

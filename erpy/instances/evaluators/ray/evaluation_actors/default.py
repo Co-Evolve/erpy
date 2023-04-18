@@ -87,7 +87,7 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
                         observations, reward, done, info = env.step(actions)
 
                         self._callback.after_step(observations=observations, actions=actions,
-                                                  rewards=rewards, info=info)
+                                                  rewards=reward, info=info)
 
                         rewards.append(reward)
 
