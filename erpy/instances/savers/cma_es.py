@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class CMAESSaverConfig(SaverConfig):
+    save_optimizer: bool = True
+
     @property
     def saver(self) -> Type[CMAESSaver]:
         return CMAESSaver
@@ -27,9 +29,10 @@ class CMAESSaver(Saver):
     def save(self, population: CMAESPopulation) -> None:
         if self.should_save(population.generation):
             # Save the populationoptimizer instance
-            path = Path(self.config.save_path) / f"optimizer.pickle"
-            with open(path, 'wb') as handle:
-                pickle.dump(population.optimizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            if self.config.save_optimizer:
+                path = Path(self.config.save_path) / f"optimizer.pickle"
+                with open(path, 'wb') as handle:
+                    pickle.dump(population.optimizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             # Save the best genome
             path = Path(self.config.save_path) / f"elite.pickle"
@@ -41,11 +44,15 @@ class CMAESSaver(Saver):
         with open(elite_path, 'rb') as handle:
             elite = pickle.load(handle)
 
-        optimizer_path = Path(self.config.save_path) / f"optimizer.pickle"
-        with open(optimizer_path, 'rb') as handle:
-            optimizer = pickle.load(handle)
+        output = [elite]
 
-        return [elite, optimizer]
+        if self.config.save_optimizer:
+            optimizer_path = Path(self.config.save_path) / f"optimizer.pickle"
+            with open(optimizer_path, 'rb') as handle:
+                optimizer = pickle.load(handle)
+            output += [optimizer]
+
+        return output
 
     def load_checkpoint(self, checkpoint_path: str, population: CMAESPopulation) -> None:
         raise NotImplementedError
