@@ -41,7 +41,11 @@ class CMAESSaver(Saver):
         with open(elite_path, 'rb') as handle:
             elite = pickle.load(handle)
 
-        return [elite]
+        optimizer_path = Path(self.config.save_path) / f"optimizer.pickle"
+        with open(optimizer_path, 'rb') as handle:
+            optimizer = pickle.load(handle)
+
+        return [elite, optimizer]
 
     def load_checkpoint(self, checkpoint_path: str, population: CMAESPopulation) -> None:
         raise NotImplementedError
