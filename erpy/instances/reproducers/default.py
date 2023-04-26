@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Type
 
 import erpy
@@ -8,6 +9,7 @@ from erpy.framework.reproducer import ReproducerConfig, Reproducer
 from erpy.instances.populations.default import DefaultPopulation
 
 
+@dataclass
 class DefaultReproducerConfig(ReproducerConfig):
     @property
     def reproducer(self) -> Type[DefaultReproducer]:
@@ -34,7 +36,8 @@ class DefaultReproducer(Reproducer):
             population.to_evaluate.add(genome_id)
 
     def reproduce(self, population: Population) -> None:
-        amount_to_create = population.config.population_size - len(population.to_evaluate)
+        amount_to_create = population.config.population_size - len(population.to_evaluate) - len(
+            population.under_evaluation)
 
         for _ in range(amount_to_create):
             parent_id = erpy.random_state.choice(list(population.to_reproduce))

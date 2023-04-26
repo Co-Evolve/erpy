@@ -128,7 +128,7 @@ class Population(metaclass=abc.ABCMeta):
 
         for evaluation_result in self.evaluation_results:
             self.genomes[evaluation_result.genome.genome_id] = evaluation_result.genome
-            self.under_evaluation.remove(evaluation_result.genome.genome_id)
+            self.under_evaluation.discard(evaluation_result.genome.genome_id)
             if self.all_time_best_evaluation_result is None or \
                     self.all_time_best_evaluation_result.fitness < evaluation_result.fitness:
                 self._all_time_best_evaluation_result = evaluation_result

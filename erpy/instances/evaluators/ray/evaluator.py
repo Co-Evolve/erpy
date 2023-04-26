@@ -80,12 +80,13 @@ class RayDistributedEvaluator(Evaluator):
 
         pbar = tqdm(
             desc=f"[RayDistributedEvaluator] Generation {population.generation}\t-\tReceived results from workers",
-            total=len(target_genomes))
+            total=len(population.under_evaluation))
         timeout = None
         while self.pool.has_next():
             try:
                 evaluation_result = self.pool.get_next_unordered(timeout=timeout)
                 population.evaluation_results.append(evaluation_result)
+                population.under_evaluation.discard(evaluation_result.genome.genome_id)
                 timeout = self.config.evaluation_timeout
                 pbar.update(1)
             except TimeoutError:

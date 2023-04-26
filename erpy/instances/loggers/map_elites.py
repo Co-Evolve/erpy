@@ -88,8 +88,9 @@ class MAPElitesLogger(WandBLogger):
                 if self.config.normalize_heatmaps and attribute == "fitness":
                     grid[useful] /= np.max(grid[useful])
 
-                ax = sns.heatmap(grid, mask=mask, linewidth=0., xticklabels=[0] + [None] * (x_dim - 2) + [1],
-                                 yticklabels=[0] + [None] * (y_dim - 2) + [1],
+                ax = sns.heatmap(grid, mask=mask, linewidth=0.,
+                                 xticklabels=[0] + [None] * (x_dim - 2) + [1] if x_dim > 1 else [0],
+                                 yticklabels=[0] + [None] * (y_dim - 2) + [1] if y_dim > 1 else [0],
                                  vmin=np.min(grid[useful]),
                                  vmax=np.max(grid[useful]))
                 ax.set_xlabel(self.config.archive_dimension_labels[0])
