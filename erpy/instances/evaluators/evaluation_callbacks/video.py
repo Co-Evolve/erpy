@@ -44,6 +44,8 @@ class VideoCallback(EvaluationCallback):
         self._episode_index += 1
         self._frames.clear()
 
+    def after_evaluation(self) -> None:
+        self._episode_index = 0
 
 class FrameSaverCallback(EvaluationCallback):
     def __init__(self, save_frequency: int = 1):
