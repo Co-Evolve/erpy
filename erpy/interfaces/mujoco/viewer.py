@@ -32,8 +32,10 @@ def evaluate_with_video_capture(env_config: MJCEnvironmentConfig, robot: MJCRobo
     done = False
     observations = gym_env.reset()
     frames = []
+
     while not done:
         observations = vectorize_observations(observations)
+
         actions = robot(observations)[0]
         observations, reward, done, info = gym_env.step(actions)
 

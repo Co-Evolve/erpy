@@ -4,7 +4,7 @@ import abc
 from dataclasses import dataclass
 from typing import Callable, Iterable, Dict, Any, Type, TYPE_CHECKING, Optional, Union
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 import erpy.framework.environment as environment

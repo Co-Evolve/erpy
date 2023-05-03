@@ -5,13 +5,12 @@ from dataclasses import dataclass
 from typing import Union
 
 import dm_control.composer
-import gym
+import gymnasium as gym
 import numpy as np
-from stable_baselines3.common.vec_env import VecEnv
 
 import erpy.framework.phenome as phenome
 
-Environment = Union[gym.Env, dm_control.composer.Environment, VecEnv]
+Environment = Union[gym.Env, dm_control.composer.Environment]
 
 
 @dataclass

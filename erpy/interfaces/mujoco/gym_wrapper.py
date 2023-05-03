@@ -2,13 +2,15 @@
 Source: https://github.com/denisyarats/dmc2gym/blob/master/dmc2gym/wrappers.py
 Code was slightly adapted.
 """
-from typing import Dict
+from typing import Dict, Optional, Tuple
 
-import gym
+import gymnasium as gym
 import numpy as np
+from dm_control import composer
 from dm_control.mujoco import wrapper
 from dm_env import specs, TimeStep
-from gym import core, spaces
+from gymnasium import spaces
+from gymnasium.core import ObsType
 
 
 def _spec_to_box(spec, dtype):
@@ -68,7 +70,7 @@ def _flatten_obs(obs):
         return np.array([])
 
 
-def get_clean_obs(timestep: TimeStep, dtype = np.float32) -> Dict[str, np.ndarray]:
+def get_clean_obs(timestep: TimeStep, dtype=np.float32) -> Dict[str, np.ndarray]:
     obs = timestep.observation
     cleaned_obs = dict()
     for key, value in obs.items():
@@ -83,12 +85,12 @@ def vectorize_observations(observations: Dict[str, np.ndarray]) -> Dict[str, np.
     return vectorized_obs
 
 
-class DMC2GymWrapper(core.Env):
+class DMC2GymWrapper(gym.Env):
     metadata = {"render.modes": ['rgb_array']}
 
     def __init__(
             self,
-            env,
+            env: composer.Environment,
             seed,
             from_pixels=False,
             height=400,
@@ -175,12 +177,22 @@ class DMC2GymWrapper(core.Env):
             pass
         info['discount'] = time_step.discount
 
-        return obs, reward, done, info
+        return obs, reward, done, False, info
 
-    def reset(self):
+    def reset(
+            self,
+            *,
+            seed: Optional[int] = None,
+            options: Optional[dict] = None,
+    ) -> Tuple[ObsType, dict]:
         time_step = self._env.reset()
         obs = self._get_obs(time_step)
-        return obs
+        info = {}
+        try:
+            info.update(self._env.task.get_info(time_step=time_step, physics=self._env.physics))
+        except AttributeError:
+            pass
+        return obs, info
 
     def render(self, mode='rgb_array', height=None, width=None, camera_ids=None):
         if camera_ids is None:

@@ -5,9 +5,8 @@ from dataclasses import dataclass
 from typing import Callable, List, Dict
 
 import dm_env.specs
-import gym
+import gymnasium as gym
 from dm_control import composer
-from stable_baselines3.common.monitor import Monitor
 
 import erpy
 from erpy.framework.environment import EnvironmentConfig, Environment
@@ -30,7 +29,6 @@ def dm_control_to_gym_environment(config: MJCEnvironmentConfig, environment: com
                          seed=erpy.seed,
                          from_pixels=False,
                          camera_ids=config.camera_ids)
-    env = Monitor(env)
     return env
 
 

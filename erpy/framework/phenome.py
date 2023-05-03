@@ -4,7 +4,6 @@ import abc
 from typing import Union, Dict, Tuple, Optional
 
 import numpy as np
-from stable_baselines3.common.callbacks import BaseCallback
 
 import erpy.framework.environment as env
 import erpy.framework.evaluator as evaluator
@@ -108,5 +107,5 @@ class Controller(Phenome, metaclass=abc.ABCMeta):
         np.ndarray, Optional[np.ndarray]]:
         return self(observations=observations, *args, **kwargs), None
 
-    def learn(self, total_timesteps: int, callback: Union[evaluator.EvaluationCallback, BaseCallback]) -> None:
+    def learn(self, total_timesteps: int, callback: Union[evaluator.EvaluationCallback]) -> None:
         pass
