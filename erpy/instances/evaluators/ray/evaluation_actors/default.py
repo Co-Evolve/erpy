@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Type, Callable
 
-import gym
+import gymnasium as gym
 import ray
 from dm_control.rl.control import PhysicsError
 

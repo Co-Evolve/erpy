@@ -1,6 +1,6 @@
 from typing import Callable
 
-import gym
+import gymnasium as gym
 from stable_baselines3.common.env_util import make_vec_env
 
 from erpy.framework.environment import EnvironmentConfig, Environment
