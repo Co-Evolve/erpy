@@ -87,7 +87,7 @@ def vectorize_observations(observations: Dict[str, np.ndarray]) -> Dict[str, np.
 
 class DMC2GymWrapper(gym.Env):
     metadata = {"render.modes": ['rgb_array']}
-
+    render_mode = 'rgb_array'
     def __init__(
             self,
             env: composer.Environment,
