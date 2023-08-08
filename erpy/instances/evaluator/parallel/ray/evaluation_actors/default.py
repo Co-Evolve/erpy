@@ -1,50 +1,68 @@
 from dataclasses import dataclass
-from typing import Type, Callable
+from typing import Callable, Type
 
 import gym
 import ray
 from dm_control.rl.control import PhysicsError
 
 from erpy.framework.ea import EAConfig
-from erpy.framework.evaluator import EvaluationResult, EvaluationActor
+from erpy.framework.evaluator import EvaluationActor, EvaluationResult
 from erpy.framework.genome import Genome
 from erpy.framework.phenome import Robot
-from erpy.instances.evaluator.ray.evaluator import DistributedEvaluatorConfig, RayEvaluatorConfig, \
-    RayDistributedEvaluator
+from erpy.instances.evaluator.ray.evaluator import DistributedEvaluatorConfig, RayDistributedEvaluator, \
+    RayEvaluatorConfig
 from erpy.instances.evaluator.ray.utils import create_vectorized_environment
 
 
 @dataclass
 class RayDefaultEvaluatorConfig(RayEvaluatorConfig):
     @property
-    def actor_factory(self) -> Callable[[DistributedEvaluatorConfig], Type[ray.actor.ActorClass]]:
+    def actor_factory(
+            self
+            ) -> Callable[[DistributedEvaluatorConfig], Type[ray.actor.ActorClass]]:
         return ray_default_evaluation_actor_factory
 
     @property
-    def evaluator(self) -> Type[RayDistributedEvaluator]:
+    def evaluator(
+            self
+            ) -> Type[RayDistributedEvaluator]:
         return RayDistributedEvaluator
 
 
-def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationActor]:
+def ray_default_evaluation_actor_factory(
+        config: EAConfig
+        ) -> Type[EvaluationActor]:
     @ray.remote(num_cpus=config.evaluator_config.num_cores_per_worker)
     class RayDefaultEvaluationActor(EvaluationActor):
-        def __init__(self, config: EAConfig) -> None:
+        def __init__(
+                self,
+                config: EAConfig
+                ) -> None:
             super().__init__(config=config)
 
         @property
-        def config(self) -> RayDefaultEvaluatorConfig:
+        def config(
+                self
+                ) -> RayDefaultEvaluatorConfig:
             return super().config
 
-        def _create_environment(self, robot: Robot) -> gym.vector.VectorEnv:
+        def _create_environment(
+                self,
+                robot: Robot
+                ) -> gym.vector.VectorEnv:
             self._callback.update_environment_config(self.config.environment_config)
             environment = create_vectorized_environment(
-                morphology_generator=lambda: self.config.robot(robot.specification).morphology,
-                environment_config=self.config.environment_config,
-                number_of_environments=self.config.num_cores_per_worker)
+                    morphology_generator=lambda: self.config.robot(robot.specification).morphology,
+                    environment_config=self.config.environment_config,
+                    number_of_environments=self.config.num_cores_per_worker
+                    )
             self._callback.from_env(environment)
             return environment
 
-        def evaluate(self, genome: Genome) -> EvaluationResult:
+        def evaluate(
+                self,
+                genome: Genome
+                ) -> EvaluationResult:
             shared_callback_data = dict()
             self._callback.before_evaluation(config=self._ea_config, shared_callback_data=shared_callback_data)
 
@@ -86,8 +104,9 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
                         self._callback.before_step(observations=observations, actions=actions)
                         observations, reward, done, info = env.step(actions)
 
-                        self._callback.after_step(observations=observations, actions=actions,
-                                                  rewards=rewards, info=info)
+                        self._callback.after_step(
+                            observations=observations, actions=actions, rewards=rewards, info=info
+                            )
 
                         rewards.append(reward)
 
@@ -109,9 +128,10 @@ def ray_default_evaluation_actor_factory(config: EAConfig) -> Type[EvaluationAct
 
             env.close()
             fitness = self.config.episode_aggregator(episode_fitnesses)
-            evaluation_result = EvaluationResult(genome=genome, fitness=fitness,
-                                                 info={"episode_failures": {"physics": physics_failures,
-                                                                            "validity": validity_failures}})
+            evaluation_result = EvaluationResult(
+                genome=genome, fitness=fitness, info={
+                        "episode_failures": {"physics": physics_failures, "validity": validity_failures}}
+                )
             self._callback.update_evaluation_result(evaluation_result)
 
             self._callback.after_evaluation()

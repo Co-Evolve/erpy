@@ -9,75 +9,117 @@ from erpy import random_state
 
 
 class Parameter(metaclass=abc.ABCMeta):
-    def __init__(self, value: T) -> None:
+    def __init__(
+            self,
+            value: T
+            ) -> None:
         self._value = value
 
     @property
     @abc.abstractmethod
-    def value(self) -> T:
+    def value(
+            self
+            ) -> T:
         raise NotImplementedError
 
-    def __eq__(self, other: Parameter) -> bool:
+    def __eq__(
+            self,
+            other: Parameter
+            ) -> bool:
         eq = self.value == other.value
         if isinstance(eq, Iterable):
             eq = all(eq)
         return eq
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         self._value = value
 
-    def set_random_value(self) -> None:
+    def set_random_value(
+            self
+            ) -> None:
         raise NotImplementedError
 
 
 class FixedParameter(Parameter):
-    def __init__(self, value: T) -> None:
+    def __init__(
+            self,
+            value: T
+            ) -> None:
         super().__init__(value)
 
     @property
-    def value(self) -> T:
+    def value(
+            self
+            ) -> T:
         return self._value
 
-    def __eq__(self, other: Parameter) -> bool:
+    def __eq__(
+            self,
+            other: Parameter
+            ) -> bool:
         eq = self.value == other.value
         if isinstance(eq, Iterable):
             eq = all(eq)
         return eq
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         raise TypeError("Cannot change the value of a FixedParameter.")
 
 
 class SynchronizedParameter(FixedParameter):
-    def __init__(self, linked_parameter: Parameter) -> None:
+    def __init__(
+            self,
+            linked_parameter: Parameter
+            ) -> None:
         super().__init__(linked_parameter.value)
         self._linked_parameter = linked_parameter
 
     @property
-    def value(self) -> T:
+    def value(
+            self
+            ) -> T:
         return self._linked_parameter.value
 
-    def __eq__(self, other: Parameter) -> bool:
+    def __eq__(
+            self,
+            other: Parameter
+            ) -> bool:
         eq = self.value == other.value
         if isinstance(eq, Iterable):
             eq = all(eq)
         return eq
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         raise TypeError("Cannot set the value of a SynchronizedParameter directly.")
 
 
 class ContinuousParameter(Parameter):
-    def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[float] = None) -> None:
+    def __init__(
+            self,
+            low: float = -1.0,
+            high: float = 1.0,
+            value: Optional[float] = None
+            ) -> None:
         super(ContinuousParameter, self).__init__(value=value)
         self.low = low
         self.high = high
 
     @property
-    def value(self) -> float:
+    def value(
+            self
+            ) -> float:
         if self._value is None:
             self.set_random_value()
 
@@ -85,22 +127,34 @@ class ContinuousParameter(Parameter):
         return self._value
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         self._value = value
 
-    def set_random_value(self) -> None:
+    def set_random_value(
+            self
+            ) -> None:
         self._value = random_state.uniform(low=self.low, high=self.high)
 
 
 class RangeParameter(Parameter):
-    def __init__(self, low: float = -1.0, high: float = 1.0, value: Optional[np.ndarray] = None) -> None:
+    def __init__(
+            self,
+            low: float = -1.0,
+            high: float = 1.0,
+            value: Optional[np.ndarray] = None
+            ) -> None:
         super(RangeParameter, self).__init__(value)
         self.low = low
         self.high = high
         self.sorted = sorted
 
     @property
-    def value(self) -> np.ndarray:
+    def value(
+            self
+            ) -> np.ndarray:
         if self._value is None:
             self.set_random_value()
 
@@ -110,38 +164,60 @@ class RangeParameter(Parameter):
         return self._value
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         assert self.low <= self.value <= self.high, f"[RangeParameter] Given value '{value}' is " \
                                                     f"not in range [{self.low}, {self.high}]"
         self._value = value
 
-    def set_random_value(self) -> None:
+    def set_random_value(
+            self
+            ) -> None:
         self._value = random_state.uniform(low=self.low, high=self.high, size=2)
 
 
 class DiscreteParameter(Parameter):
-    def __init__(self, options: List[T], value: Optional[T] = None) -> None:
+    def __init__(
+            self,
+            options: List[T],
+            value: Optional[T] = None
+            ) -> None:
         super(DiscreteParameter, self).__init__(value)
         self.options = options
 
     @property
-    def value(self) -> T:
+    def value(
+            self
+            ) -> T:
         if self._value is None:
             self.set_random_value()
         return self._value
 
     @value.setter
-    def value(self, value: T) -> None:
+    def value(
+            self,
+            value: T
+            ) -> None:
         assert value in self.options, f"[DiscreteParameter] Given value '{value}' is not in options '{self.options}'"
         self._value = value
 
-    def set_random_value(self) -> None:
+    def set_random_value(
+            self
+            ) -> None:
         self._value = random_state.choice(a=self.options)
 
 
 class MultiDiscreteParameter(Parameter):
-    def __init__(self, options: List[T], min_size: int = 0, max_size: Optional[int] = None, value: Optional[T] = None,
-                 sorted: bool = False):
+    def __init__(
+            self,
+            options: List[T],
+            min_size: int = 0,
+            max_size: Optional[int] = None,
+            value: Optional[T] = None,
+            sorted: bool = False
+            ):
         super().__init__(value)
         self.options = options
         self.min_size = min_size
@@ -149,7 +225,9 @@ class MultiDiscreteParameter(Parameter):
         self.sorted = sorted
 
     @property
-    def value(self) -> np.ndarray:
+    def value(
+            self
+            ) -> np.ndarray:
         if self._value is None:
             self.set_random_value()
         if self.sorted:
@@ -157,11 +235,16 @@ class MultiDiscreteParameter(Parameter):
         return self._value
 
     @value.setter
-    def value(self, value) -> None:
+    def value(
+            self,
+            value
+            ) -> None:
         for v in value:
             assert v in self.options, f"[MultiDiscreteParameter] Given value '{v}' is not in options '{self.options}'"
         self._value = value
 
-    def set_random_value(self) -> None:
+    def set_random_value(
+            self
+            ) -> None:
         num_parameters = random_state.randint(low=self.min_size, high=self.max_size + 1)
         self._value = random_state.choice(a=self.options, size=num_parameters, replace=False)

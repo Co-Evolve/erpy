@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Type, Callable, Set, Optional
+from typing import Callable, Optional, Set, Type
 
 from tqdm import tqdm
 
 from erpy.framework.genome import Genome
 from erpy.framework.population import Population
-from erpy.framework.reproducer import ReproducerConfig, Reproducer
+from erpy.framework.reproducer import Reproducer, ReproducerConfig
 
 
 @dataclass
@@ -17,20 +17,30 @@ class UniqueReproducerConfig(ReproducerConfig):
     initialisation_f: Optional[Callable[[Reproducer, Population], None]] = None
 
     @property
-    def reproducer(self) -> Type[UniqueReproducer]:
+    def reproducer(
+            self
+            ) -> Type[UniqueReproducer]:
         return UniqueReproducer
 
 
 class UniqueReproducer(Reproducer):
-    def __init__(self, config: UniqueReproducerConfig) -> None:
+    def __init__(
+            self,
+            config: UniqueReproducerConfig
+            ) -> None:
         super().__init__(config=config)
         self._archive = None
 
     @property
-    def config(self) -> UniqueReproducerConfig:
+    def config(
+            self
+            ) -> UniqueReproducerConfig:
         return super().config
 
-    def _initialise_from_checkpoint(self, population: Population) -> None:
+    def _initialise_from_checkpoint(
+            self,
+            population: Population
+            ) -> None:
         super().initialise_from_checkpoint(population=population)
 
         key = "unique-reproducer-archive"
@@ -40,7 +50,10 @@ class UniqueReproducer(Reproducer):
             self._archive = set()
             population.saving_data[key] = self._archive
 
-    def initialise_population(self, population: Population) -> None:
+    def initialise_population(
+            self,
+            population: Population
+            ) -> None:
         self._initialise_from_checkpoint(population=population)
 
         if self.config.initialisation_f is not None:
@@ -51,14 +64,17 @@ class UniqueReproducer(Reproducer):
             for i in tqdm(range(num_to_generate), desc="[UniqueReproducer] Initialisation"):
                 # Create genome
                 genome_id = self.next_genome_id
-                genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
-                                                                   genome_id=genome_id)
+                genome = self.config.genome_config.genome.generate(
+                    config=self.config.genome_config, genome_id=genome_id
+                    )
 
                 num_retries = 0
-                while not self.config.uniqueness_test(self._archive, genome,
-                                                      population) and num_retries < self.config.max_retries:
-                    genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
-                                                                       genome_id=genome_id)
+                while not self.config.uniqueness_test(
+                        self._archive, genome, population
+                        ) and num_retries < self.config.max_retries:
+                    genome = self.config.genome_config.genome.generate(
+                        config=self.config.genome_config, genome_id=genome_id
+                        )
 
                 # Add genome to population
                 population.genomes[genome_id] = genome
@@ -66,7 +82,10 @@ class UniqueReproducer(Reproducer):
                 # Initial genomes should always be evaluated
                 population.to_evaluate.add(genome_id)
 
-    def reproduce(self, population: Population) -> None:
+    def reproduce(
+            self,
+            population: Population
+            ) -> None:
         for parent_id in tqdm(population.to_reproduce, desc="[UniqueReproducer] reproduce"):
             parent_genome = population.genomes[parent_id]
 
@@ -74,8 +93,9 @@ class UniqueReproducer(Reproducer):
             child_genome = parent_genome.mutate(child_id)
 
             num_retries = 0
-            while not self.config.uniqueness_test(self._archive, child_genome,
-                                                  population) and num_retries < self.config.max_retries:
+            while not self.config.uniqueness_test(
+                    self._archive, child_genome, population
+                    ) and num_retries < self.config.max_retries:
                 # Continue mutating the same genome until it is unique
                 child_genome.genome_id = parent_id
                 child_genome = child_genome.mutate(child_id)
@@ -85,10 +105,12 @@ class UniqueReproducer(Reproducer):
             if num_retries == self.config.max_retries:
                 # Generate a unique random genome if mutation fails to find one
                 num_retries = 0
-                while not self.config.uniqueness_test(self._archive, child_genome,
-                                                      population) and num_retries < self.config.max_retries:
-                    child_genome = self.config.genome_config.genome.generate(config=self.config.genome_config,
-                                                                             genome_id=child_id)
+                while not self.config.uniqueness_test(
+                        self._archive, child_genome, population
+                        ) and num_retries < self.config.max_retries:
+                    child_genome = self.config.genome_config.genome.generate(
+                        config=self.config.genome_config, genome_id=child_id
+                        )
                     num_retries += 1
 
             if num_retries < self.config.max_retries:
@@ -101,5 +123,7 @@ class UniqueReproducer(Reproducer):
         population.logging_data["UniqueReproducer/number_of_unique_genomes"] = len(self._archive)
 
     @property
-    def archive(self) -> Set:
+    def archive(
+            self
+            ) -> Set:
         return self._archive

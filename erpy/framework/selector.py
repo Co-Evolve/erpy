@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
+from erpy.framework.component import EAComponent, EAComponentConfig
 from erpy.framework.population import Population
 
 if TYPE_CHECKING:
@@ -11,22 +12,31 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SelectorConfig(metaclass=abc.ABCMeta):
+class SelectorConfig(EAComponentConfig):
     @property
     @abc.abstractmethod
-    def selector(self) -> Type[Selector]:
+    def selector(
+            self
+            ) -> Type[Selector]:
         raise NotImplementedError
 
 
-class Selector(metaclass=abc.ABCMeta):
-    def __init__(self, config: EAConfig) -> None:
-        self._ea_config = config
-        self._config = config.selector_config
-
-    @abc.abstractmethod
-    def select(self, population: Population) -> None:
-        raise NotImplementedError
+class Selector(EAComponent):
+    def __init__(
+            self,
+            config: EAConfig
+            ) -> None:
+        super().__init__(config)
 
     @property
-    def config(self) -> SelectorConfig:
-        return self._config
+    def config(
+            self
+            ) -> SelectorConfig:
+        return self.ea_config.selector_config
+
+    @abc.abstractmethod
+    def select(
+            self,
+            population: Population
+            ) -> None:
+        raise NotImplementedError

@@ -3,29 +3,32 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass
 from itertools import count
-from typing import Dict, Type, Any, TYPE_CHECKING, Set, List
+from typing import Any, Dict, List, Set, TYPE_CHECKING, Type
 
 import erpy.framework.evaluator as evaluator
 import erpy.framework.genome as genome
+from erpy.framework.component import EAComponent, EAComponentConfig
 
 if TYPE_CHECKING:
     from erpy.framework.ea import EAConfig
 
 
 @dataclass
-class PopulationConfig:
-    population_size: int
-
+class PopulationConfig(EAComponentConfig):
     @property
     @abc.abstractmethod
-    def population(self) -> Type[Population]:
+    def population(
+            self
+            ) -> Type[Population]:
         raise NotImplementedError
 
 
-class Population(metaclass=abc.ABCMeta):
-    def __init__(self, config: EAConfig) -> None:
-        self._ea_config = config
-        self._config = config.population_config
+class Population(EAComponent):
+    def __init__(
+            self,
+            config: EAConfig
+            ) -> None:
+        super().__init__(config)
 
         self.generation = 0
         self.num_evaluations = 0
@@ -44,85 +47,122 @@ class Population(metaclass=abc.ABCMeta):
         self._all_time_best_evaluation_result: evaluator.EvaluationResult = None
 
     @property
-    def config(self) -> PopulationConfig:
-        return self._config
+    def config(
+            self
+            ) -> PopulationConfig:
+        return self.ea_config.population_config
 
     @property
-    def ea_config(self) -> EAConfig:
-        return self._ea_config
-
-    @property
-    def logging_data(self) -> Dict[str, Any]:
+    def logging_data(
+            self
+            ) -> Dict[str, Any]:
         return self._logging_data
 
     @property
-    def all_time_best_evaluation_result(self) -> evaluator.EvaluationResult:
+    def all_time_best_evaluation_result(
+            self
+            ) -> evaluator.EvaluationResult:
         return self._all_time_best_evaluation_result
 
     @property
-    def saving_data(self) -> Dict[str, Any]:
+    def saving_data(
+            self
+            ) -> Dict[str, Any]:
         return self._saving_data
 
     @saving_data.setter
-    def saving_data(self, data: Dict[str, Any]) -> None:
+    def saving_data(
+            self,
+            data: Dict[str, Any]
+            ) -> None:
         self._saving_data = data
 
     @property
-    def genomes(self) -> Dict[int, genome.Genome]:
+    def genomes(
+            self
+            ) -> Dict[int, genome.Genome]:
         return self._genomes
 
     @property
-    def to_maintain(self) -> Set[int]:
+    def to_maintain(
+            self
+            ) -> Set[int]:
         return self._to_maintain
 
     @property
-    def to_reproduce(self) -> Set[int]:
+    def to_reproduce(
+            self
+            ) -> Set[int]:
         return self._to_reproduce
 
     @property
-    def to_evaluate(self) -> Set[int]:
+    def to_evaluate(
+            self
+            ) -> Set[int]:
         return self._to_evaluate
 
     @property
-    def under_evaluation(self) -> Set[int]:
+    def under_evaluation(
+            self
+            ) -> Set[int]:
         return self._under_evaluation
 
-    def before_reproduction(self) -> None:
+    def before_reproduction(
+            self
+            ) -> None:
         pass
 
-    def after_reproduction(self) -> None:
+    def after_reproduction(
+            self
+            ) -> None:
         self.to_reproduce.clear()
 
         genome_ids_to_keep = self.to_maintain.union(self.to_reproduce).union(self.to_evaluate).union(
-            self.under_evaluation
-        )
+                self.under_evaluation
+                )
         current_genome_ids = set(self.genomes.keys())
         to_remove = current_genome_ids - genome_ids_to_keep
         for key in to_remove:
             self.genomes.pop(key)
 
-    def before_logging(self) -> None:
+    def before_logging(
+            self
+            ) -> None:
         pass
 
-    def after_logging(self) -> None:
+    def after_logging(
+            self
+            ) -> None:
         self.logging_data.clear()
 
-    def before_saving(self) -> None:
+    def before_saving(
+            self
+            ) -> None:
         pass
 
-    def after_saving(self) -> None:
+    def after_saving(
+            self
+            ) -> None:
         self.saving_data.clear()
 
-    def before_selection(self) -> None:
+    def before_selection(
+            self
+            ) -> None:
         pass
 
-    def after_selection(self) -> None:
+    def after_selection(
+            self
+            ) -> None:
         pass
 
-    def before_evaluation(self) -> None:
+    def before_evaluation(
+            self
+            ) -> None:
         self.evaluation_results.clear()
 
-    def after_evaluation(self) -> None:
+    def after_evaluation(
+            self
+            ) -> None:
         self.num_evaluations += len(self.evaluation_results)
 
         self.to_evaluate.clear()
@@ -130,9 +170,11 @@ class Population(metaclass=abc.ABCMeta):
         for evaluation_result in self.evaluation_results:
             self.genomes[evaluation_result.genome.genome_id] = evaluation_result.genome
             self.under_evaluation.remove(evaluation_result.genome.genome_id)
-            if self.all_time_best_evaluation_result is None or \
-                    self.all_time_best_evaluation_result.fitness < evaluation_result.fitness:
+            if self.all_time_best_evaluation_result is None or self.all_time_best_evaluation_result.fitness < \
+                    evaluation_result.fitness:
                 self._all_time_best_evaluation_result = evaluation_result
 
-    def get_next_child_id(self) -> int:
+    def get_next_child_id(
+            self
+            ) -> int:
         return next(self._genome_indexer)

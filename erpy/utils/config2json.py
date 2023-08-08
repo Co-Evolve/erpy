@@ -1,10 +1,13 @@
 import dataclasses
 import json
-from typing import Dict
+from typing import Any, Dict
 
 
 class Config2JSONEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(
+            self,
+            o: Any
+            ):
         try:
             if dataclasses.is_dataclass(o):
                 return dataclasses.asdict(o)
@@ -13,9 +16,13 @@ class Config2JSONEncoder(json.JSONEncoder):
             return str(o)
 
 
-def config2json(config: dataclasses.dataclass) -> str:
+def config2json(
+        config: dataclasses.dataclass
+        ) -> str:
     return json.dumps(obj=config, cls=Config2JSONEncoder)
 
 
-def config2dict(config: dataclasses.dataclass) -> Dict:
+def config2dict(
+        config: dataclasses.dataclass
+        ) -> Dict:
     return json.loads(config2json(config=config))

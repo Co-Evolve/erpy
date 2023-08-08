@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Type, Callable, Iterable
+from typing import Callable, Iterable, Type
 
 import gymnasium as gym
 
 from erpy.framework.ea import EAConfig
-from erpy.framework.evaluator import EvaluatorConfig, Evaluator, EvaluationActor, EvaluationResult
+from erpy.framework.evaluator import EvaluationActor, EvaluationResult, Evaluator, EvaluatorConfig
 from erpy.framework.genome import Genome
 from erpy.framework.phenome import Robot
 from erpy.framework.population import Population
@@ -17,20 +17,30 @@ class DefaultEvaluatorConfig(EvaluatorConfig):
     reward_aggregator: Callable[[Iterable], float]
 
     @property
-    def evaluator(self) -> Type[DefaultEvaluator]:
+    def evaluator(
+            self
+            ) -> Type[DefaultEvaluator]:
         return DefaultEvaluator
 
 
 class DefaultEvaluator(Evaluator):
-    def __init__(self, config: EAConfig) -> None:
+    def __init__(
+            self,
+            config: EAConfig
+            ) -> None:
         super().__init__(config)
         self._evaluation_actor = DefaultEvaluationActor(config)
 
     @property
-    def config(self) -> DefaultEvaluator:
+    def config(
+            self
+            ) -> DefaultEvaluator:
         return super().config
 
-    def evaluate(self, population: Population) -> None:
+    def evaluate(
+            self,
+            population: Population
+            ) -> None:
         all_genomes = population.genomes
         target_genome_ids = population.to_evaluate
 
@@ -42,33 +52,43 @@ class DefaultEvaluator(Evaluator):
 
 
 class DefaultEvaluationActor(EvaluationActor):
-    def __init__(self, config: EAConfig) -> None:
+    def __init__(
+            self,
+            config: EAConfig
+            ) -> None:
         super().__init__(config)
 
     @property
-    def config(self) -> DefaultEvaluatorConfig:
+    def config(
+            self
+            ) -> DefaultEvaluatorConfig:
         return super().config
 
-    def _create_environment(self, robot: Robot) -> gym.Env:
+    def _create_environment(
+            self,
+            robot: Robot
+            ) -> gym.Env:
         self._callback.update_environment_config(self.config.environment_config)
         environment = self.config.environment_config.environment(
-            morphology=robot.morphology
-        )
+                morphology=robot.morphology
+                )
         return environment
 
-    def evaluate(self, genome: Genome) -> EvaluationResult:
+    def evaluate(
+            self,
+            genome: Genome
+            ) -> EvaluationResult:
         shared_callback_data = dict()
 
         self._callback.before_evaluation(
-            config=self._ea_config,
-            shared_callback_data=shared_callback_data
-        )
-        self._callback.from_genome(genome)
+                config=self._ea_config, shared_callback_data=shared_callback_data
+                )
+        self._callback.from_genome(genome=genome)
 
-        robot = self.config.robot(genome.specification)
+        robot = self.config.robot(specification=genome.specification)
         self._callback.from_robot(robot)
 
-        env = self._create_environment()
+        env = self._create_environment(robot=robot)
         self._callback.from_env(env)
 
         self._callback.before_episode()
@@ -78,20 +98,12 @@ class DefaultEvaluationActor(EvaluationActor):
         rewards = []
         while not done:
             actions = robot(observations)
-            self._callback.before_step(
-                observations=observations,
-                actions=actions
-            )
+            self._callback.before_step(observations=observations, actions=actions)
 
             observations, reward, terminated, truncated, info = env.step(actions)
             rewards.append(reward)
 
-            self._callback.after_step(
-                observations=observations,
-                actions=actions,
-                reward=reward,
-                info=info
-            )
+            self._callback.after_step(observations=observations, actions=actions, reward=reward, info=info)
 
         env.close()
         self._callback.after_episode()
@@ -99,9 +111,8 @@ class DefaultEvaluationActor(EvaluationActor):
         fitness = self.config.reward_aggregator(rewards)
 
         evaluation_result = EvaluationResult(
-            genome=genome,
-            fitness=fitness
-        )
+                genome=genome, fitness=fitness, info={}
+                )
         self._callback.update_evaluation_result(evaluation_result)
 
         self._callback.after_evaluation()
