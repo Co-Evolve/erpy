@@ -9,9 +9,9 @@ from erpy.framework.ea import EAConfig
 from erpy.framework.evaluator import EvaluationResult, EvaluationActor
 from erpy.framework.genome import Genome
 from erpy.framework.phenome import Robot
-from erpy.instances.evaluators.ray.evaluator import RayEvaluatorConfig, RayDistributedEvaluator, \
+from erpy.instances.evaluator.ray.evaluator import RayEvaluatorConfig, RayDistributedEvaluator, \
     DistributedEvaluatorConfig
-from erpy.instances.evaluators.ray.utils import create_vectorized_environment
+from erpy.instances.evaluator.ray.utils import create_vectorized_environment
 
 
 @dataclass

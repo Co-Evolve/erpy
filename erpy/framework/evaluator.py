@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Callable, Iterable, Dict, Any, Type, TYPE_CHECKING, Optional, Union
+from typing import Dict, Any, Type, TYPE_CHECKING, Optional, Union
 
-import gym
+import gymnasium as gym
 import numpy as np
+from gymnasium.core import ObsType, ActType
 
 import erpy.framework.environment as environment
 import erpy.framework.genome as genome
@@ -27,11 +28,7 @@ class EvaluationResult:
 class EvaluatorConfig(metaclass=abc.ABCMeta):
     environment_config: environment.EnvironmentConfig
     robot: Type[phenome.Robot]
-    reward_aggregator: Callable[[Iterable[float]], float]
-    episode_aggregator: Callable[[Iterable[float]], float]
-    num_eval_episodes: int
-    hard_episode_reset: bool
-    callback: Optional[EvaluationCallback]
+    callback: EvaluationCallback | None
 
     @property
     @abc.abstractmethod
@@ -75,15 +72,10 @@ class EvaluationActor(metaclass=abc.ABCMeta):
 
 
 class EvaluationCallback(metaclass=abc.ABCMeta):
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(self) -> None:
         self._ea_config = None
         self._config = None
-
         self._shared_callback_data = None
-
-        if name is None:
-            name = self.__class__.__name__
-        self._name = name
 
     @property
     def shared_callback_data(self) -> Dict[any, str]:
@@ -96,9 +88,6 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
     @property
     def config(self) -> EvaluatorConfig:
         return self._config
-
-    def __call__(self, *args, **kwargs):
-        pass
 
     def before_evaluation(self, config: EAConfig, shared_callback_data: Dict[str, Any]) -> None:
         self._ea_config = config
@@ -123,19 +112,15 @@ class EvaluationCallback(metaclass=abc.ABCMeta):
     def from_genome(self, genome: genome.Genome) -> None:
         pass
 
-    def before_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray) -> None:
+    def before_step(self, observations: ObsType, actions: ActType) -> None:
         pass
 
-    def after_step(self, observations: Dict[str, np.ndarray], actions: np.ndarray,
-                   rewards: Union[float, np.ndarray], info: Optional[Dict[str, Any]] = None) -> None:
+    def after_step(self, observations: ObsType, actions: ActType,
+                   reward: Union[float, np.ndarray], info: Optional[Dict[str, Any]] = None) -> None:
         pass
 
-    def update_evaluation_result(self, evaluation_result: EvaluationResult) -> EvaluationResult:
-        return evaluation_result
+    def update_evaluation_result(self, evaluation_result: EvaluationResult) -> None:
+        pass
 
     def update_environment_config(self, environment_config: environment.EnvironmentConfig) -> None:
         pass
-
-    @property
-    def name(self) -> str:
-        return self._name

@@ -2,8 +2,8 @@ import wandb
 
 from erpy.framework.evaluator import EvaluationCallback
 from erpy.framework.genome import Genome
-from erpy.instances.evaluators.ray.evaluation_actors.controller_learning import RayControllerLearningEvaluatorConfig
-from erpy.instances.loggers.wandb_logger import WandBLoggerConfig
+from erpy.instances.evaluator.ray.evaluation_actors.controller_learning import RayControllerLearningEvaluatorConfig
+from erpy.instances.logger.wandb_logger import WandBLoggerConfig
 
 
 class DistributedWandbInitialisationEvaluationCallback(EvaluationCallback):

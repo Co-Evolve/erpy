@@ -33,6 +33,14 @@ class Saver(metaclass=abc.ABCMeta):
 
         Path(self.config.save_path).mkdir(parents=True, exist_ok=True)
 
+    @property
+    def config(self) -> SaverConfig:
+        return self._config
+
+    @property
+    def ea_config(self) -> EAConfig:
+        return self._ea_config
+
     def should_save(self, generation: int) -> bool:
         return generation % self.config.save_freq == 0 or generation == self._ea_config.num_generations
 
@@ -43,7 +51,3 @@ class Saver(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def load(self) -> Population:
         raise NotImplementedError
-
-    @property
-    def config(self) -> SaverConfig:
-        return self._config

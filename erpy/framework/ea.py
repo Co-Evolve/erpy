@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, List, Tuple, Dict, Any
+from typing import List, Dict, Any
 
 from erpy.framework.evaluator import EvaluatorConfig, Evaluator, EvaluationResult
-from erpy.framework.genome import Genome, DummyGenome
+from erpy.framework.genome import Genome
 from erpy.framework.logger import LoggerConfig, Logger
 from erpy.framework.population import PopulationConfig, Population
 from erpy.framework.reproducer import ReproducerConfig, Reproducer
@@ -20,10 +20,7 @@ class EAConfig:
     logger_config: LoggerConfig
     saver_config: SaverConfig
 
-    cli_args: Optional[Dict[str, Any]] = None
-    checkpoint_path: str = None
-    num_generations: Optional[int] = None
-    num_evaluations: Optional[int] = None
+    extra_args: Dict[str, Any]
 
     @property
     def population(self) -> Population:
@@ -66,58 +63,13 @@ class EA:
         return self._config
 
     def is_done(self) -> bool:
-        is_done = False
-        if self.config.num_generations is not None and self.population.generation >= self.config.num_generations:
-            is_done = True
-        if self.config.num_evaluations is not None and self.population.num_evaluations >= self.config.num_evaluations:
-            is_done = True
-        return is_done
+        raise NotImplementedError
 
     def run(self) -> None:
-        self.reproducer.initialise_population(self.population)
+        raise NotImplementedError
 
-        while not self.is_done():
-            self.population.before_reproduction()
-            self.reproducer.reproduce(population=self.population)
-            self.population.after_reproduction()
-            self.population.before_evaluation()
-            self.evaluator.evaluate(population=self.population)
-            self.population.after_evaluation()
-            self.population.before_logging()
-            self.logger.log(population=self.population)
-            self.population.after_logging()
-            self.population.before_saving()
-            self.saver.save(population=self.population)
-            self.population.after_saving()
-            self.population.before_selection()
-            self.selector.select(population=self.population)
-            self.population.after_selection()
-            self.population.generation += 1
+    def analyze_specifications(self, specifications: List[RobotSpecification]) -> List[EvaluationResult]:
+        raise NotImplementedError
 
-    def load_genomes(self, path: Optional[str] = None) -> List[Genome]:
-        if path is not None:
-            self.config.saver_config.save_path = path
-
-        return self.saver.load()
-
-    def analyze(self, path: Optional[str] = None) -> Tuple[List[Genome], Dict[int, EvaluationResult]]:
-        genomes = self.load_genomes(path)
-
-        return genomes, self.analyze_genomes(genomes)
-
-    def analyze_specifications(self, specifications: List[RobotSpecification]) -> Tuple[
-        List[Genome], Dict[int, EvaluationResult]]:
-        genomes = [DummyGenome(genome_id=i, specification=specification) for i, specification in
-                   enumerate(specifications)]
-        return genomes, self.analyze_genomes(genomes=genomes)
-
-    def analyze_genomes(self, genomes: List[Genome]) -> Dict[int, EvaluationResult]:
-        self.population = self.config.population
-
-        for genome in genomes:
-            self.population.genomes[genome.genome_id] = genome
-            self.population.to_evaluate.add(genome.genome_id)
-
-        self.evaluator.evaluate(self.population)
-
-        return self.population.evaluation_results
+    def analyze_genomes(self, genomes: List[Genome]) -> List[EvaluationResult]:
+        raise NotImplementedError

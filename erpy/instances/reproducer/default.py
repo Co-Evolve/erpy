@@ -5,7 +5,7 @@ from typing import Type
 import erpy
 from erpy.framework.population import Population
 from erpy.framework.reproducer import ReproducerConfig, Reproducer
-from erpy.instances.populations.default import DefaultPopulation
+from erpy.instances.population.default import DefaultPopulation
 
 
 class DefaultReproducerConfig(ReproducerConfig):

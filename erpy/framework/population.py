@@ -44,6 +44,14 @@ class Population(metaclass=abc.ABCMeta):
         self._all_time_best_evaluation_result: evaluator.EvaluationResult = None
 
     @property
+    def config(self) -> PopulationConfig:
+        return self._config
+
+    @property
+    def ea_config(self) -> EAConfig:
+        return self._ea_config
+
+    @property
     def logging_data(self) -> Dict[str, Any]:
         return self._logging_data
 
@@ -58,14 +66,6 @@ class Population(metaclass=abc.ABCMeta):
     @saving_data.setter
     def saving_data(self, data: Dict[str, Any]) -> None:
         self._saving_data = data
-
-    @property
-    def config(self) -> PopulationConfig:
-        return self._config
-
-    @property
-    def ea_config(self) -> EAConfig:
-        return self._ea_config
 
     @property
     def genomes(self) -> Dict[int, genome.Genome]:
@@ -94,7 +94,8 @@ class Population(metaclass=abc.ABCMeta):
         self.to_reproduce.clear()
 
         genome_ids_to_keep = self.to_maintain.union(self.to_reproduce).union(self.to_evaluate).union(
-            self.under_evaluation)
+            self.under_evaluation
+        )
         current_genome_ids = set(self.genomes.keys())
         to_remove = current_genome_ids - genome_ids_to_keep
         for key in to_remove:

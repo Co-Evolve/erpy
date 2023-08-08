@@ -23,7 +23,7 @@ class WandBLoggerConfig(LoggerConfig):
     update_saver_path: bool
     pre_initialise_wandb: bool = True
     enable_tensorboard_backend: bool = False
-    _run_name: str = None
+    _run_name: str | None = None
 
     @property
     def run_name(self) -> str:
@@ -39,10 +39,12 @@ class WandBLoggerConfig(LoggerConfig):
 
 
 def wandb_log_values(run: WandBRun, name: str, values: List[float], step: int) -> None:
-    run.log({f'{name}_max': np.max(values),
-             f'{name}_min': np.min(values),
-             f'{name}_mean': np.mean(values),
-             f'{name}_std': np.std(values)}, step=step)
+    run.log(
+        {f'{name}_max': np.max(values),
+         f'{name}_min': np.min(values),
+         f'{name}_mean': np.mean(values),
+         f'{name}_std': np.std(values)}, step=step
+    )
 
 
 def wandb_log_value(run: WandBRun, name: str, value: Union[float, int], step: int) -> None:
@@ -57,25 +59,28 @@ def wandb_log_unknown(run: WandBRun, name: str, data: Any, step: int) -> None:
 
 
 class WandBLogger(Logger):
-    def __init__(self, config: EAConfig):
+    def __init__(self, config: EAConfig) -> None:
         super().__init__(config=config)
 
         self.run = None
         if self.config.pre_initialise_wandb:
             self._initialise_wandb()
 
-    def _initialise_wandb(self) -> None:
-        self.run = wandb.init(project=self.config.project_name,
-                              group=self.config.group,
-                              tags=self.config.tags,
-                              config=config2dict(self.config),
-                              sync_tensorboard=self.config.enable_tensorboard_backend)
-        self.config.run_name = self.run.name
-        self._update_saver_path()
-
     @property
     def config(self) -> WandBLoggerConfig:
         return super().config
+
+    def _initialise_wandb(self) -> None:
+        self.run = wandb.init(
+            project=self.config.project_name,
+            name=self.config.run_name,
+            group=self.config.group,
+            tags=self.config.tags,
+            config=config2dict(self.config),
+            sync_tensorboard=self.config.enable_tensorboard_backend
+        )
+        self.config.run_name = self.run.name
+        self._update_saver_path()
 
     def _update_saver_path(self):
         if self.config.update_saver_path:
@@ -105,15 +110,9 @@ class WandBLogger(Logger):
         except IndexError:
             pass
 
-    def _log_failures(self, population: Population) -> None:
-        failures = [er.info["episode_failures"] for er in population.evaluation_results]
-        physics_failures = sum([er_failure["physics"] for er_failure in failures])
-        wandb_log_value(run=self.run, name="episode_failures", value=physics_failures, step=population.generation)
-
     def log(self, population: Population) -> None:
-        if self.run is None:
+        if not self.run:
             self._initialise_wandb()
         self._log_fitness(population)
         self._log_population_data(population)
         self._log_evaluation_result_data(population)
-        self._log_failures(population)

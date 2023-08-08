@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import abc
-from typing import Union, Dict, Tuple, Optional
 
 import numpy as np
-from stable_baselines3.common.callbacks import BaseCallback
+from gymnasium.core import ObsType
 
-import erpy.framework.environment as env
-import erpy.framework.evaluator as evaluator
 import erpy.framework.specification as spec
 
 
@@ -45,14 +42,6 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _build_controller(self) -> Morphology:
         raise NotImplementedError
-
-    def reset(self) -> None:
-        """
-        Called at the start of every episode.
-        Use this to reset the controller if needed.
-        :return:
-        """
-        pass
 
     @property
     def specification(self) -> spec.RobotSpecification:
@@ -96,17 +85,6 @@ class Controller(Phenome, metaclass=abc.ABCMeta):
     def morphology_specification(self) -> spec.MorphologySpecification:
         return self.specification.morphology_specification
 
-    def set_environment(self, environment: env.Environment) -> None:
-        self._environment = environment
-
     @abc.abstractmethod
-    def __call__(self, observations: Union[np.ndarray, Dict[str, np.ndarray]],
-                 deterministic: bool = True) -> np.ndarray:
+    def __call__(self, observations: ObsType) -> np.ndarray:
         raise NotImplementedError
-
-    def predict(self, observations: Union[np.ndarray, Dict[str, np.ndarray]], *args, **kwargs) -> Tuple[
-        np.ndarray, Optional[np.ndarray]]:
-        return self(observations=observations, *args, **kwargs), None
-
-    def learn(self, total_timesteps: int, callback: Union[evaluator.EvaluationCallback, BaseCallback]) -> None:
-        pass

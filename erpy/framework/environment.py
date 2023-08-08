@@ -2,32 +2,18 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
-from typing import Union
 
-import dm_control.composer
-import gym
+import gymnasium as gym
 import numpy as np
-from stable_baselines3.common.vec_env import VecEnv
 
 import erpy.framework.phenome as phenome
-
-Environment = Union[gym.Env, dm_control.composer.Environment, VecEnv]
 
 
 @dataclass
 class EnvironmentConfig(metaclass=abc.ABCMeta):
-    _observation_specification = None
-    _action_specification = None
-
     @abc.abstractmethod
-    def environment(self, morphology: phenome.Morphology) -> Environment:
+    def environment(self, morphology: phenome.Morphology) -> gym.Env:
         raise NotImplementedError
-
-    def observation_specification(self) -> gym.Space:
-        return self._observation_specification
-
-    def action_specification(self) -> gym.Space:
-        return self._action_specification
 
     @property
     @abc.abstractmethod
@@ -45,16 +31,16 @@ class EnvironmentConfig(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @property
+    def original_physics_timestep(self) -> float:
+        raise NotImplementedError
+
+    @property
     def control_timestep(self) -> float:
         return self.num_substeps * self.physics_timestep
 
     @property
     def physics_timestep(self) -> float:
         return self.original_physics_timestep * self.time_scale
-
-    @property
-    def original_physics_timestep(self) -> float:
-        raise NotImplementedError
 
     @property
     def num_timesteps(self) -> int:

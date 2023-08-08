@@ -23,10 +23,14 @@ class Logger(metaclass=abc.ABCMeta):
         self._ea_config = config
         self._config = config.logger_config
 
-    @abc.abstractmethod
-    def log(self, population: Population) -> None:
-        raise NotImplementedError
-
     @property
     def config(self) -> LoggerConfig:
         return self._config
+
+    @property
+    def ea_config(self) -> EAConfig:
+        return self._ea_config
+
+    @abc.abstractmethod
+    def log(self, population: Population) -> None:
+        raise NotImplementedError

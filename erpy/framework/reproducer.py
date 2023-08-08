@@ -28,6 +28,14 @@ class Reproducer(metaclass=abc.ABCMeta):
         self._config = config.reproducer_config
         self._genome_indexer = count(0)
 
+    @property
+    def config(self) -> ReproducerConfig:
+        return self._config
+
+    @property
+    def ea_config(self) -> EAConfig:
+        return self._ea_config
+
     @abc.abstractmethod
     def initialise_population(self, population: Population) -> None:
         raise NotImplementedError
@@ -43,10 +51,6 @@ class Reproducer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def reproduce(self, population: Population) -> None:
         raise NotImplementedError
-
-    @property
-    def config(self) -> ReproducerConfig:
-        return self._config
 
     @property
     def next_genome_id(self) -> int:

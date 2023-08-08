@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import abc
 import pickle
-from typing import List, Iterable, TYPE_CHECKING, Callable
+from typing import List, Iterable, Callable
 
 from erpy.framework.parameters import Parameter, FixedParameter
-
-if TYPE_CHECKING:
-    pass
 
 
 class Specification(metaclass=abc.ABCMeta):
@@ -29,7 +26,7 @@ class Specification(metaclass=abc.ABCMeta):
                 parameters += field.parameters
         return parameters
 
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         with open(path, 'wb') as handle:
             pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -108,7 +105,7 @@ class RobotSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.
         self._morphology_parameterizer = morphology_parameterizer
         self._controller_parameterizer = controller_parameterizer
 
-    def parameterize_specification(self, specification: RobotSpecification):
+    def parameterize_specification(self, specification: RobotSpecification) -> None:
         self._morphology_parameterizer.parameterize_specification(specification.morphology_specification)
         self._controller_parameterizer.parameterize_specification(specification.controller_specification)
 
@@ -119,9 +116,11 @@ class RobotSpecificationParameterizer(SpecificationParameterizer, metaclass=abc.
 
     def get_target_parameters(self, specification: RobotSpecification) -> List[Parameter]:
         morphology_parameters = self._morphology_parameterizer.get_target_parameters(
-            specification.morphology_specification)
+            specification.morphology_specification
+        )
         controller_parameters = self._controller_parameterizer.get_target_parameters(
-            specification.controller_specification)
+            specification.controller_specification
+        )
         return morphology_parameters + controller_parameters
 
     def get_parameter_labels(self, specification: RobotSpecification) -> List[str]:
