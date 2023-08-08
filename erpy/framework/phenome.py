@@ -40,7 +40,7 @@ class Robot(Phenome, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _build_controller(self) -> Morphology:
+    def _build_controller(self) -> Controller:
         raise NotImplementedError
 
     @property
