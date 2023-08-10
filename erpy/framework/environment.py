@@ -11,7 +11,7 @@ from erpy.framework.component import EAComponentConfig
 
 
 @dataclass
-class EnvironmentConfig(EAComponentConfig):
+class EnvironmentConfig:
     @abc.abstractmethod
     def environment(
             self,
